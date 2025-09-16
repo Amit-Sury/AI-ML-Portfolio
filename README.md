@@ -15,7 +15,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Applied preprocessing and data augmentation (rotation, flipping, normalization) to improve model generalization.  
   - Leveraged **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
   - Deployed the model on **AWS SageMaker** for inference. 
-- **Demo/Notebook**: [Link to Jupyter Notebook](./CNN/notebook/cnn-tensorflow-sagemaker.ipynb)
+- **Demo/Notebook**: [Link to Jupyter Notebook](./CNN/Notebook/cnn-tensorflow-sagemaker.ipynb)
 
 ---
 
