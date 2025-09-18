@@ -19,7 +19,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ---
 
-### 2. [AWS RAG](./AWS RAG)
+### 2. [AWS-RAG](./AWS-RAG)
 - **Goal**: A knowledge assistant chatbot using **Large Language Models (LLMs)** and **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware responses.
 - **Tech Stack**: AWS (Bedrock, S3, OpenSearch), Python, Boto3, Streamlit 
 - **Highlights**:
@@ -27,7 +27,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Designed a **knowledge base pipeline** leveraging S3 and OpenSearch for scalable document storage and retrieval.
   - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capability**.
   - Built an **interactive UI with Streamlit** for seamless user interaction.
-- **Demo/Script**: [Link to Chatbot UI Script](./RAG/Script/aws-rag-chatbot.py)
+- **Demo/Script**: [Link to Chatbot UI Script](./AWS-RAG/Script/aws-rag-chatbot.py)
 
 ---
 
