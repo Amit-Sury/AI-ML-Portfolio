@@ -17,7 +17,8 @@
   - Choose a **Vector store** (e.g., *AWS OpenSearch*).  
   - Once created, ensure the data is synced.  
 - **Step 3:** Ensure you have access to a **Large Language Model (LLM)** (e.g., *Anthropic Claude 3 Haiku*).  
-  - This will be referenced in the chatbot UI script. You may need to update `ask_bedrock()` function in the script in case you're using model other than Anthropic Claude 3 Haiku
+  - This will be referenced in the chatbot UI script. You may need to update `ask_bedrock()` function in the script in case you're using model other than Anthropic Claude 3 Haiku.
+💡 *Note: I've used Amazon Titan Text Embeddings V2 as embedding model & Anthropic Claude 3 Haiku as LLM* 
 - **Step 4:** Update the following in `aws-rag-chatbot.py`:  
   - `kb_id` → your Knowledge Base ID  
   - `model_id` → the Model ID of your LLM  
