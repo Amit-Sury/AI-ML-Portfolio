@@ -10,7 +10,7 @@
 ---
 
 # Steps to Deploy the RAG Model
-
+💡 *Note: I've used Amazon Titan Text Embeddings V2 as embedding model & Anthropic Claude 3 Haiku as LLM.* 
 - **Step 1:** Create an **S3 bucket** and upload your documents (`.pdf`, `.doc`, `.txt`, etc.) containing proprietary information. This will act as the **knowledge source** for RAG.  
 - **Step 2:** In the **AWS Bedrock Console → Knowledge Bases**, create a knowledge base with the S3 bucket as the data source.  
   - Choose an **Embeddings model** (e.g., *Amazon Titan Text Embeddings V2*).  
@@ -18,7 +18,6 @@
   - Once created, ensure the data is synced.  
 - **Step 3:** Ensure you have access to a **Large Language Model (LLM)** (e.g., *Anthropic Claude 3 Haiku*).  
   - This will be referenced in the chatbot UI script. You may need to update `ask_bedrock()` function in the script in case you're using model other than Anthropic Claude 3 Haiku.
-💡 *Note: I've used Amazon Titan Text Embeddings V2 as embedding model & Anthropic Claude 3 Haiku as LLM* 
 - **Step 4:** Update the following in `aws-rag-chatbot.py`:  
   - `kb_id` → your Knowledge Base ID  
   - `model_id` → the Model ID of your LLM  
