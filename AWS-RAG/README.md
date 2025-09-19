@@ -1,3 +1,13 @@
+# Architecture
+<img width="986" height="545" alt="image" src="https://github.com/user-attachments/assets/fb3e1b40-ec75-4009-b046-147a852e9774" />
+
+# Architecture Summary
+This RAG chatbot architecture consists of two phases:
+  - Preprocessing (Offline Phase): Documents from S3 are chunked, converted into embeddings using an embedding model, and stored in a vector database (AWS OpenSearch).
+  - Online Phase: A user query is sent from the UI to AWS Bedrock. Relevant knowledge chunks are retrieved from the vector DB and passed to the LLM to generate a context-aware response, which is then returned to the user.
+
+---
+
 # Prerequisites
 - The chatbot UI is a **Python script** that uses **Boto3** and **Streamlit**.
 - Ensure you have the following installed locally:
@@ -9,7 +19,7 @@
  
 ---
 
-# Steps to Deploy the RAG Model
+# Steps to Deploy this Model
 💡 *Note: I've used Amazon Titan Text Embeddings V2 as embedding model & Anthropic Claude 3 Haiku as LLM.* 
 - **Step 1:** Create an **S3 bucket** and upload your documents (`.pdf`, `.doc`, `.txt`, etc.) containing proprietary information. This will act as the **knowledge source** for RAG.  
 - **Step 2:** In the **AWS Bedrock Console → Knowledge Bases**, create a knowledge base with the S3 bucket as the data source.  
