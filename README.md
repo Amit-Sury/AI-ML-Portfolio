@@ -49,5 +49,5 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ## 🛠️ Tools & Technologies
 - **Programming**: Python (NumPy, Pandas, Matplotlib)  
-- **ML/DL**: TensorFlow, Keras  
+- **ML/DL**: TensorFlow, Keras, Ollama, Hugging face, Chroma DB (for vector store)  
 - **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)  
