@@ -14,6 +14,8 @@ The workflow consists of two phases:
   - `python-docx`
   - `PyPDF2`
   - `chromadb`
+    
+  💡 *Use pip command to install packages.*
   ```
   pip install streamlit python-docx PyPDF2 chromadb ollama
   ```  
