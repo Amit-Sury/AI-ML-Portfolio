@@ -9,11 +9,18 @@ The workflow consists of two phases:
 # Prerequisites
 - The chatbot UI is a **Python script** that uses **ChromaDB**, **Ollama**, **Streamlit** and **embedding/LLM models** from Hugging Face.
 - Ensure you have the following installed locally:
-  - `Python 3.8'+` 
-  - `boto3`  
-  - `streamlit`  
+  - `Python 3.8'+` (Make sure you’re using Python 3.8+ and ideally a virtual environment to avoid conflicts)
+  - `streamlit`
+  - `python-docx`
+  - `PyPDF2`
+  - `chromadb`
+  ```
+  pip install streamlit python-docx PyPDF2 chromadb ollama
+  ```  
 - Download ollama and required models.  
-  - Install Ollama from the webiste https://ollama.com/
+  - Install Ollama from the webiste [Ollama.com](https://ollama.com/)
+- Download ollama and required models.  
+  - Install Ollama from the webiste [Ollama.com](https://ollama.com/)
   - Once Ollama is installed then download the models using following commands:
     ```
     ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
