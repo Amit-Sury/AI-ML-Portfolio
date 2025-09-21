@@ -14,6 +14,7 @@ The workflow consists of two phases:
   - `python-docx`
   - `PyPDF2`
   - `chromadb`
+  - `ollama`
     
   💡 *Use pip command to install packages.*
   ```
@@ -21,9 +22,7 @@ The workflow consists of two phases:
   ```  
 - Download ollama and required models.  
   - Install Ollama from the webiste [Ollama.com](https://ollama.com/)
-- Download ollama and required models.  
-  - Install Ollama from the webiste [Ollama.com](https://ollama.com/)
-  - Once Ollama is installed then download the models using following commands:
+  - Once Ollama is installed then download the models by executing following commands in a terminal:
     ```
     ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
     ollama pull hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
@@ -32,24 +31,25 @@ The workflow consists of two phases:
 ---
 
 # Steps to Deploy this Model
-💡 *Note: I've used Amazon Titan Text Embeddings V2 as embedding model & Anthropic Claude 3 Haiku as LLM.* 
-- **Step 1:** Create an **S3 bucket** and upload your documents (`.pdf`, `.doc`, `.txt`, etc.) containing proprietary information. This will act as the **knowledge source** for RAG.  
-- **Step 2:** In the **AWS Bedrock Console → Knowledge Bases**, create a knowledge base with the S3 bucket as the data source.  
-  - Choose an **Embeddings model** (e.g., *Amazon Titan Text Embeddings V2*).  
-  - Choose a **Vector store** (e.g., *AWS OpenSearch*).  
-  - Once created, ensure the data is synced.  
-- **Step 3:** Ensure you have access to a **Large Language Model (LLM)** (e.g., *Anthropic Claude 3 Haiku*).  
-  - This will be referenced in the chatbot UI script. You may need to update `ask_bedrock()` function in the script in case you're using model other than Anthropic Claude 3 Haiku.
-- **Step 4:** Update the following in `aws-rag-chatbot.py`:  
-  - `kb_id` → your Knowledge Base ID  
-  - `model_id` → the Model ID of your LLM  
-  - `region_name` → the AWS region of your knowledge base  
-  - `model_arn` → ARN of your chosen LLM  
-- **Step 6:** Run the script using following command:  
+ 
+- **Step 1:** Build the **Knowledge Store** by executing **`local-rag-indexing.py`** script.
+   ```
+  python local-rag-indexing.py
+  ``` 
+  - **What it Does**
+    - Reads the documents from your specified document folder.
+    - Creates a persistent **ChromaDB** vector store at your specified location.
+    - Generates embeddings using EMBEDDING_MODEL and stores it in persistent ChromaDB vector store. This vector store acts as the knowledge base for the chatbot.
+  - **Notes**
+    - Run this script only once or whenever you add new documents.
+    - Supported document formats: .pdf, .docx files. You may have to extend this script to use other required formats.
+ - **Step 2:** Update `path` variable in **`local-rag-chatbot.py`** script to specify the location of your **ChromaDB** vector store which was created in the previous step.
+- **Step 3:** Start the Streamlit chatbot UI 
   ```bash
-  streamlit run aws-rag-chatbot.py
+  streamlit run local-rag-chatbot.py
   ```
-- **Step 7:** After testing, make sure to clean up following to avoid unnecessary charges in AWS:
-  - Delete the Knowledge Base
-  - Delete the Vector store
-  - Delete the objects in S3 bucket  
+  - **What it Does**
+    - Starts a **Interactive web-based** chat interface.
+    - Based on your query it will first search the knowledge store for answers to the queries.
+    - If the answer is not found in the knowledge store then it will fall back to general LLM. 
+
