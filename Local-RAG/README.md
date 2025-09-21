@@ -12,8 +12,13 @@ The workflow consists of two phases:
   - `Python 3.8'+` 
   - `boto3`  
   - `streamlit`  
-- AWS credentials must be configured in your local environment (`aws configure`).  
-  - These credentials will be used to connect to **AWS Bedrock**.
+- Download ollama and required models.  
+  - Install Ollama from the webiste https://ollama.com/
+  - Once Ollama is installed then download the models using following commands:
+    ```
+    ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
+    ollama pull hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
+    ```
  
 ---
 
