@@ -1,0 +1,1 @@
+This repository contains scripts to build and interact with a local Retrieval-Augmented Generation (RAG) chatbot using ChromaDB and Ollama. The chatbot allows you to query your documents intelligently using embeddings.
