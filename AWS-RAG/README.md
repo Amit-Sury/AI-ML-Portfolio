@@ -11,9 +11,14 @@ This RAG chatbot architecture consists of two phases:
 # Prerequisites
 - The chatbot UI is a **Python script** that uses **Boto3** and **Streamlit**.
 - Ensure you have the following installed locally:
-  - `Python 3.8'+` 
+  - `Python 3.8'+` (Make sure you’re using Python 3.8+ and ideally a virtual environment to avoid conflicts)
   - `boto3`  
-  - `streamlit`  
+  - `streamlit`
+    
+💡 *Use pip command to install packages:*
+  ```
+  pip install boto3 streamlit 
+  ```  
 - AWS credentials must be configured in your local environment (`aws configure`).  
   - These credentials will be used to connect to **AWS Bedrock**.
  
