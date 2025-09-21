@@ -1,5 +1,12 @@
+# Introduction
+This project implements a **Convolutional Neural Network (CNN)** to classify images of animals. It leverages:
+- **Jupyter Notebook** and **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
+- **AWS SageMaker** for model inference, enabling scalable and managed predictions.
+
+---
+
 # Steps to Deploy this Model in AWS Sagemaker
-___
+
 - **Step 1:** Create a bucket in S3 and upload the images in following folder structure
  ```bash
   dataset/
