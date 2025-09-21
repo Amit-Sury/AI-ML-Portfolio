@@ -39,7 +39,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - **Chroma DB** as vector store for a persistent knowledge base.
   - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capabilities**.
   - Built an **interactive UI with Streamlit** for seamless user interaction.
-  - Embeddings and LLM models are sourced from Hugging Face.
+  - Embeddings and LLM models are sourced from [Hugging Face](https://huggingface.co/).
     - **Embedding model link**: https://hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
     - **Language model link**: https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
 
