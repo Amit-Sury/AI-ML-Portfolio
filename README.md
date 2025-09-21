@@ -8,10 +8,10 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ## 📂 Projects
 
 ### 1. [CNN](./CNN)
-- **Goal**: A **Convolutional Neural Network (CNN)** that classifies images of Dog, Horse, and Elephant.  
+- **Goal**: A **Convolutional Neural Network (CNN)** that classifies images of animals.  
 - **Tech Stack**: Python, TensorFlow, Keras, Pandas, Matplotlib  
 - **Highlights**:
-  - Trained on a dataset of 3,900 images (1,300 each of Dog, Elephant, Horse) with an additional 450 images for validation. Dataset sourced from [Kaggle](https://www.kaggle.com/).  
+  - Trained on a dataset of 3,900 images (1,300 each of Dog, Elephant, Horse) with additional 450 images for validation set. Dataset sourced from [Kaggle](https://www.kaggle.com/).  
   - Applied preprocessing and data augmentation (rotation, flipping, normalization) to improve model generalization.  
   - Leveraged **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
   - Deployed the model on **AWS SageMaker** for inference. 
@@ -49,5 +49,5 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ## 🛠️ Tools & Technologies
 - **Programming**: Python (NumPy, Pandas, Matplotlib)  
-- **ML/DL**: TensorFlow, Keras, Ollama, Hugging face, Chroma DB (for vector store)  
+- **ML/DL**: TensorFlow, Keras, Ollama, Hugging Face, Chroma DB (for vector store)  
 - **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)  
