@@ -22,7 +22,7 @@ The workflow consists of two phases:
   ```  
 - Download ollama and required models.  
   - Install Ollama from the webiste [Ollama.com](https://ollama.com/)
-  - Once Ollama is installed then download the models by executing following commands in a terminal:
+  - Once Ollama is installed then download the models by executing following commands in a terminal. Embeddings and LLM models sourced from [Hugging Face](https://huggingface.co/):
     ```
     ollama pull hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
     ollama pull hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
