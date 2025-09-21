@@ -35,7 +35,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 - **Goal**: Build and interact with a **Local Retrieval-Augmented Generation (RAG) chatbot** using ChromaDB and Ollama. The chatbot allows you to query documents intelligently using embeddings.
 - **Tech Stack**: Python, Chroma DB, Ollama, Hugging face, Streamlit 
 - **Highlights**:
-  - Used **Ollama** to build the RAG model locally.  
+  - **Ollama** is used to build the RAG model locally.  
   - **Chroma DB** as vector store for a persistent knowledge base.
   - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capabilities**.
   - Built an **interactive UI with Streamlit** for seamless user interaction.
