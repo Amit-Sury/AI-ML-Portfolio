@@ -80,7 +80,13 @@ path=r"D:\RAG\chroma_db"   #Absolute Path where ChromaDB is stored
 crdb_client = chromadb.PersistentClient(path)
 
 # Get the collection, make sure the collection name matches the one used in indexing script
-collection = crdb_client.get_collection("kb_collection")
+try:
+    collection = crdb_client.get_collection("kb_collection")
+except Exception as e:
+    st.error(f"❌ Collection 'kb_collection' not found: {e}")
+    st.error("Please run the indexing script to create the knowledge store before using the chatbot.")
+    st.error("Exiting Chatbot...")
+    st.stop()  # Stop further execution if collection is not found
 
 # Embedding model
 embedding_model = 'hf.co/CompendiumLabs/bge-base-en-v1.5-gguf'
@@ -117,4 +123,5 @@ if prompt := st.chat_input("Type your question..."):
     st.session_state["messages"].append(("assistant", answer))
 
 ######################### Streamlit UI Code END #########################
+
 
