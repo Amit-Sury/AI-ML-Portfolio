@@ -6,11 +6,11 @@
 # Import packages
 import chromadb
 import ollama
-import subprocess
+from ollama import Client
 import streamlit as st
 
 # Function to retrieve answer using RAG approach
-def retrieve_answer(query, embedding_model, llm_model, collection):
+def retrieve_answer(query, embedding_model, llm_model, collection, conversation_history):
     # Get embedding for the query
     query_embedding = ollama.embed(model=embedding_model, input=query)['embeddings'][0]
     
@@ -46,32 +46,39 @@ def retrieve_answer(query, embedding_model, llm_model, collection):
     
     #Above check ensure that if distance of the chunk from the knowledge store is greater
     # than the similarity_threshold then context will be empty
-    answer = generate_answer(query, context, llm_model)
+    answer = generate_answer(query, context, llm_model, conversation_history)
     
     # return answer with source citations if context is found
     return f"Source Docs: {source_docs} \n\n {answer}" if source_docs else answer
 
 # Function to generate answer using LLM given context and question
-def generate_answer(query, context, llm_model):
+def generate_answer(query, context, llm_model, conversation_history):
     
     # Prepare the instruction to be passed to LLM
-    prompt = f"""Answer the question below naturally and directly. 
-        Only use the context if it is helpful. Do not include extra explanation unless necessary.
+    prompt = f"""Answer the question below naturally and directly considering the full conversation history. 
+        Only use the context if it is helpful. Do not include extra explanation unless necessary.       
     
     Context: {context}
     Question: {query}
     Answer:
     """
     
-    #generate prompt using ollama
-    result = subprocess.run(
-        ["ollama", "run", llm_model, prompt],
-        capture_output=True,
-        text=True,
-        encoding="utf-8",    # Force UTF-8 decoding
-        errors="ignore"      # Optional: ignore any invalid characters
+    history = [
+        {"role": role, "content": content} 
+        for role, content in conversation_history
+    ]
+
+    message = history + [{"role" : "user", "content" : prompt}]
+
+
+    llm_client = Client()
+
+    response = llm_client.chat(
+        model=llm_model,
+        messages=message
     )
-    return result.stdout.strip()
+    
+    return response['message']['content']
    
 
 ######################### Initialize Chroma DB and models ###########
@@ -116,12 +123,13 @@ if prompt := st.chat_input("Type your question..."):
 
     bot_response = []
     with st.spinner("Thinking..."):
-        answer = retrieve_answer(prompt, embedding_model, llm_model, collection)
+        answer = retrieve_answer(prompt, embedding_model, llm_model, collection, st.session_state["messages"])
         
     # Show bot message
     st.chat_message("assistant").write(answer)
     st.session_state["messages"].append(("assistant", answer))
 
 ######################### Streamlit UI Code END #########################
+
 
 
