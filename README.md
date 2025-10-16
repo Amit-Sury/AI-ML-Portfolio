@@ -7,6 +7,20 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ## 📂 Projects
 
+### 1. 🤖 [GitMate.AI](./GitMate-AI)
+  
+### *Intelligent GitHub Assistant — powered by Agentic AI*
+- **Goal**: GitMate.AI is an **AI-powered** assistant that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent, **agentic automation**.
+- **Tech Stack**: LangChain + LangGraph (for agentic flow orchestration), PyGithub (GitHub API integration), AWS (Bedrock), Python, Boto3, Streamlit, AWS-Bedrock/Ollama/OpenAI (flexible LLM backends)
+- **Highlights**:
+  - 🧠 **Understands and summarizes** Pull Requests (summarize the changes in the latest PRs)   
+  - 🗨️ Fetches **file contents, Issue details, Lists users' comments** in PRs
+  - ⚙️ Automates GitHub workflows using **Langgrah, LangChain & PyGithub**  
+  - 🌐 Deployed in **AWS**, integrates with **Bedrock LLM, OpenAI, and local LLMs (Ollama)** - Providing flexible LLM backends
+  - 🖥️ **Interactive UI with Streamlit** for seamless user interaction.
+- **Demo/Script**: [Link to GitMate.AI Scripts](./GitMate-AI/Scripts/)
+---
+
 ### 2. [AWS-RAG](./AWS-RAG)
 - **Goal**: A knowledge assistant chatbot using **Large Language Models (LLMs)** and **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware responses.
 - **Tech Stack**: AWS (Bedrock, S3, OpenSearch), Python, Boto3, Streamlit 
@@ -49,6 +63,8 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ---
 
 ## 🛠️ Tools & Technologies
-- **Programming**: Python (NumPy, Pandas, Matplotlib)
-- **ML/DL**: TensorFlow, Langgraph, Langchain, Agentic AI, Keras, Ollama, Hugging Face, Chroma DB (for vector store)  
-- **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)  
+- **Programming**: Python (NumPy, Pandas, Matplotlib), PyGithub
+- **ML/DL**: TensorFlow, Langgraph + Langchain (for agentic flow orchestration), Keras, OpenAI, Ollama, Hugging Face, Chroma DB (for vector store)  
+- **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)
+
+
