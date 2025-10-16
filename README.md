@@ -7,18 +7,6 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ## 📂 Projects
 
-### 1. [CNN](./CNN)
-- **Goal**: A **Convolutional Neural Network (CNN)** that classifies images of animals.  
-- **Tech Stack**: Python, TensorFlow, Keras, Pandas, Matplotlib  
-- **Highlights**:
-  - Trained on a dataset of 3,900 images (1,300 each of Dog, Elephant, Horse) with additional 450 images for validation set. Dataset sourced from [Kaggle](https://www.kaggle.com/).  
-  - Applied preprocessing and data augmentation (rotation, flipping, normalization) to improve model generalization.  
-  - Leveraged **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
-  - Deployed the model on **AWS SageMaker** for inference. 
-- **Demo/Notebook**: [Link to Jupyter Notebook](./CNN/Notebook/cnn-tensorflow-sagemaker.ipynb)
-
----
-
 ### 2. [AWS-RAG](./AWS-RAG)
 - **Goal**: A knowledge assistant chatbot using **Large Language Models (LLMs)** and **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware responses.
 - **Tech Stack**: AWS (Bedrock, S3, OpenSearch), Python, Boto3, Streamlit 
@@ -31,7 +19,19 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ---
 
-### 3. [Local-RAG](./Local-RAG)
+### 3. [CNN](./CNN)
+- **Goal**: A **Convolutional Neural Network (CNN)** that classifies images of animals.  
+- **Tech Stack**: Python, TensorFlow, Keras, Pandas, Matplotlib  
+- **Highlights**:
+  - Trained on a dataset of 3,900 images (1,300 each of Dog, Elephant, Horse) with additional 450 images for validation set. Dataset sourced from [Kaggle](https://www.kaggle.com/).  
+  - Applied preprocessing and data augmentation (rotation, flipping, normalization) to improve model generalization.  
+  - Leveraged **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
+  - Deployed the model on **AWS SageMaker** for inference. 
+- **Demo/Notebook**: [Link to Jupyter Notebook](./CNN/Notebook/cnn-tensorflow-sagemaker.ipynb)
+
+---
+
+### 4. [Local-RAG](./Local-RAG)
 - **Goal**: Build and interact with a **Local Retrieval-Augmented Generation (RAG) chatbot** using ChromaDB and Ollama. The chatbot allows you to query documents intelligently using embeddings.
 - **Tech Stack**: Python, Chroma DB, Ollama, Hugging face, Streamlit 
 - **Highlights**:
@@ -49,6 +49,6 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ---
 
 ## 🛠️ Tools & Technologies
-- **Programming**: Python (NumPy, Pandas, Matplotlib)  
-- **ML/DL**: TensorFlow, Keras, Ollama, Hugging Face, Chroma DB (for vector store)  
+- **Programming**: Python (NumPy, Pandas, Matplotlib)
+- **ML/DL**: TensorFlow, Langgraph, Langchain, Agentic AI, Keras, Ollama, Hugging Face, Chroma DB (for vector store)  
 - **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)  
