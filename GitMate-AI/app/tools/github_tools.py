@@ -72,7 +72,7 @@ def get_github_tools():
 
 # issuecomment_tool using github api
 @tool
-def github_issuecomment_tool(issue_number: int, comment: str):
+def AddCmtOnIssue(issue_number: int, comment: str):
     """This function adds a comment to issue in github repo. 
     It takes two inputs: 
     
@@ -123,7 +123,7 @@ def github_issuecomment_tool(issue_number: int, comment: str):
 
 # pullreqs_tool using github api
 @tool
-def github_allpullreqs_tool():
+def GetAllOpenPR():
     """
     Fetches all open pull requests from the repository.
 
@@ -170,7 +170,7 @@ def github_allpullreqs_tool():
 
 # get details for a specific PR
 @tool
-def github_detailpr_tool(pr_number: int):
+def GetPRDetail(pr_number: int):
     """
     Returns details of a specific GitHub pull request (PR).
 
@@ -233,7 +233,7 @@ def github_detailpr_tool(pr_number: int):
 
 # get all the comments for a specific PR
 @tool
-def github_prcomments_tool(pr_number: int):
+def ListPRComments(pr_number: int):
     """
     Returns all the comments for a specific GitHub pull request (PR).
 
@@ -297,7 +297,7 @@ def github_prcomments_tool(pr_number: int):
 ######################## END  ###################################    
 
 @tool
-def github_filesinpr_tool(pr_number: int):
+def GetPRFlsOverview(pr_number: int):
     """
     Returns list of files present in a specific GitHub pull request (PR).
 
@@ -362,7 +362,7 @@ def github_filesinpr_tool(pr_number: int):
 
 #function returns contents of a file in pr
 @tool
-def github_prfileoverview_tool(filename: str, pr_number: int):
+def PRFlsContent(filename: str, pr_number: int):
     """
     Returns contents of file present in a specific GitHub pull request (PR). 
     Important: you must provide PR number and filename with full path
@@ -413,7 +413,7 @@ def github_prfileoverview_tool(filename: str, pr_number: int):
 
 # get list of persons who have open PRs
 @tool
-def github_listprauthors_tool():
+def ListPRAuthors():
     """
     Returns list of all the creaters who created a pull request (PR).
 
@@ -522,5 +522,4 @@ def github_authorsplot_tool(pr_authors: list[PRAuthors]):
     #st.pyplot(fig)  # <-- Streamlit-friendly rendering
                     
     return "Operation Successful"    
-
 ######################## END  ###################################    
