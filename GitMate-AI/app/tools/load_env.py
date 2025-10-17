@@ -9,7 +9,7 @@ from tools import LOG
 def loadenvfile(st):
     """This function load the .env file"""
 
-    load_dotenv(dotenv_path="D:/OneDrive/Documents/Amit/Code Repo/AI/app/.env")
+    load_dotenv(dotenv_path="./.env")
 
     #make directories if not already exists
     os.makedirs(os.path.dirname(os.environ["HISTORY_PATH"]), exist_ok=True)
@@ -27,4 +27,5 @@ def loadenvfile(st):
             private_key = f.read()
 
         os.environ["GITHUB_APP_PRIVATE_KEY"] = private_key
+
         LOG("✅Loading .env file completed")
