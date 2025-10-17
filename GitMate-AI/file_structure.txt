@@ -1,0 +1,35 @@
+/app
+├── main.py                              # Entry point 
+├── .env                                 # Environment variables 
+│
+├── docker/
+│   ├── Dockerfile                       # Container build config
+│   ├── requirements.txt                 # Dependencies
+│   └── .dockerignore                    # Exclude logs, history, .env, __pycache__, etc.
+│
+├── ui/
+│   ├── streamlit_ui.py                  # Streamlit UI logic
+│   └── helper_functions.py              # UI + graph + LLM helper utilities
+│
+├── graph/
+│   ├── graph.py                         # LangGraph workflow orchestration
+│   └── init_llm.py                      # LLM initialization logic
+│
+├── tools/
+│   ├── github_tools.py                  # GitHub API & LangGraph tools
+│   ├── github_token_handler.py          # Token management singleton
+│   ├── youtube_tools.py                 # YouTube API tools
+│   ├── log_handler.py                   # Central logging utility
+│   └── load_env.py                      # Env loading helper
+│
+├── config/
+│   └── github.private-key.pem           # GitHub App private key (add to .gitignore)
+│
+├── history/
+│   └── conv_history_userid.json         # Conversation history (dynamic, ignored in git)
+│
+└── logs/
+    └── debug_2025100615.log             # Log files (dynamic, ignored in git)
+
+
+
