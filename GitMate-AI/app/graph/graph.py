@@ -35,13 +35,13 @@ def call_llm(state: AgentState, llm):
     - To get overview of existing files in Main branch: use FileOverview
 	- To fetch a list of the repository's issues: use GetIssues
     - To fetch a list of all files in a specified directory: Use GtflsfrmDrctry  
-	- To read the contents of a file in pr: use github_prfileoverview_tool 	
-	- To add comment on Issue: Use github_issuecomment_tool
-    - To get all the open pull requests on repo: use github_allpullreqs_tool
-    - To get details/summary of a specific PR: use github_detailpr_tool
-    - To get overview of files included in PR: use github_filesinpr_tool
-    - To get list of PR creators: use github_listprauthors_tool
-    - To get list of all the comments in PR: use github_prcomments_tool
+	- To read the contents of a file in pr: use PRFlsContent 	
+	- To add comment on Issue: Use AddCmtOnIssue
+    - To get all the open pull requests on repo: use GetAllOpenPR
+    - To get details/summary of a specific PR: use GetPRDetail
+    - To get overview of files included in PR: use GetPRFlsOverview
+    - To get list of PR creators: use ListPRAuthors
+    - To get list of all the comments in PR: use ListPRComments
     - For YouTube: Use YouTubeSearchTool    
 	
 	Think step by step before using tools.	
@@ -112,8 +112,6 @@ def execute_graph(app,conversation_history,user_id):
     return last_message.content
 
 ######################## END  ###################################
-
-
 
 
 
