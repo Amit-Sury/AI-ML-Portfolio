@@ -362,7 +362,7 @@ def github_filesinpr_tool(pr_number: int):
 
 #function returns contents of a file in pr
 @tool
-def github_fileoverview_tool(filename: str, pr_number: int):
+def github_prfileoverview_tool(filename: str, pr_number: int):
     """
     Returns contents of file present in a specific GitHub pull request (PR). 
     Important: you must provide PR number and filename with full path
@@ -522,4 +522,5 @@ def github_authorsplot_tool(pr_authors: list[PRAuthors]):
     #st.pyplot(fig)  # <-- Streamlit-friendly rendering
                     
     return "Operation Successful"    
+
 ######################## END  ###################################    
