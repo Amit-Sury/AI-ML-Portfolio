@@ -3,9 +3,9 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 #my tools
 from tools import LOG, loadenvfile, get_github_tools
-from tools import get_youtubesearch, github_issuecomment_tool, github_filesinpr_tool
-from tools import github_allpullreqs_tool, github_detailpr_tool, github_prfileoverview_tool
-from tools import github_listprauthors_tool, github_prcomments_tool
+from tools import get_youtubesearch, AddCmtOnIssue, GetPRFlsOverview
+from tools import GetAllOpenPR, GetPRDetail, PRFlsContent
+from tools import ListPRAuthors, ListPRComments
 from graph import get_llm, create_graph
 
 
@@ -31,14 +31,14 @@ def initialize_app(st, user_id):
         
         tool_list = [
             *github_tools_list, #using * to unpack github tools returned by function
-            github_issuecomment_tool, 
+            AddCmtOnIssue, 
             get_youtubesearch(), 
-            github_allpullreqs_tool,
-            github_detailpr_tool,
-            github_filesinpr_tool,
-            github_prfileoverview_tool,
-            github_listprauthors_tool,
-            github_prcomments_tool
+            GetAllOpenPR,
+            GetPRDetail,
+            GetPRFlsOverview,
+            PRFlsContent,
+            ListPRAuthors,
+            ListPRComments
         ] 
 
         #Initialize llm
@@ -126,4 +126,3 @@ def read_conversation(user_id):
     return llm_conversation, streamlit_history
 
 ################### Helper functions END  ##################
-
