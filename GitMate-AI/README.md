@@ -10,6 +10,7 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 ```
 /app
  ├── main.py                # Entry point – launches Streamlit + initializes environment
+ ├── .env                   # Environment variables
  ├── /ui/                   # Streamlit UI and helper utilities
  ├── /graph/                # LangGraph orchestration and LLM initialization
  ├── /tools/                # GitHub + YouTube tools, token handler, log manager
