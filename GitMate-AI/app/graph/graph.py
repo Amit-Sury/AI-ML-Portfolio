@@ -35,7 +35,6 @@ def call_llm(state: AgentState, llm):
     - To get overview of existing files in Main branch: use FileOverview
 	- To fetch a list of the repository's issues: use GetIssues
     - To fetch a list of all files in a specified directory: Use GtflsfrmDrctry  
-	- To search for code in the repository: Use SearchCode
 	- To read the contents of a file in pr: use github_fileoverview_tool 	
 	- To add comment on Issue: Use github_issuecomment_tool
     - To get all the open pull requests on repo: use github_allpullreqs_tool
@@ -113,6 +112,7 @@ def execute_graph(app,conversation_history,user_id):
     return last_message.content
 
 ######################## END  ###################################
+
 
 
 
