@@ -58,7 +58,8 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 # 🐳 Steps to Deploy this App
 - **Local Deployment**
   - **Step 1:** Copy the entire project folder [app](./app) to your local machine or server.
-  - **Step 2:** Update `.env` file. Summary of required variables:
+  - **Step 2:** Copy your github app's private key .pem file in `/config` folder.
+  - **Step 3:** Update `.env` file. Summary of required variables:
     
    | Category       | Description                                                                 |
    |----------------|-----------------------------------------------------------------------------|
@@ -69,8 +70,8 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
    | Optional Flags | Enable/disable LangChain message logging, debug mode                        |
 
    > **Note:** Replace placeholders with your actual credentials and paths.
-  - **Step 3:** Update `model_id` in `/graph/init_llm.py`:
-  - **Step 4:** Run the App using following command:
+  - **Step 4:** Update `model_id` in `/graph/init_llm.py`:
+  - **Step 5:** Run the App using following command:
     ```
     streamlit run main.py
     ```
