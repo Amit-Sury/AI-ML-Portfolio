@@ -18,7 +18,7 @@
 ├── tools/
 │   ├── github_tools.py                  # GitHub API & LangGraph tools
 │   ├── github_token_handler.py          # Token management singleton
-│   ├── youtube_tools.py                 # YouTube API tools
+│   ├── youtube_tools.py                 # YouTube search API tool, just for fun
 │   ├── log_handler.py                   # Central logging utility
 │   └── load_env.py                      # Env loading helper
 │
@@ -30,6 +30,7 @@
 │
 └── logs/
     └── debug_2025100615.log             # Log files (dynamic, ignored in git)
+
 
 
 
