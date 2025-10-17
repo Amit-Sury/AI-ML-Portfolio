@@ -1,0 +1,5 @@
+__pycache__/
+*.log
+/logs/
+/history/
+/config/github.private-key.pem
