@@ -6,7 +6,7 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 ---
 
 # File Organization
-- Refer [file_organization.txt](./GitMate-AI/file_organization.txt) for more details.
+- Refer [file_organization.txt](./file_organization.txt) for more details.
 ```
 /app
  ├── main.py                # Entry point – launches Streamlit + initializes environment
