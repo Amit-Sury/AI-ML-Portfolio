@@ -1,0 +1,23 @@
+# Ignore environment and config
+.env
+/config/sample_privatekey.pem
+
+# Ignore local runtime data
+/logs/
+/history/
+
+# Ignore compiled bytecode
+__pycache__/
+*.pyc
+
+# Ignore temporary or cache files
+*.log
+*.tmp
+.DS_Store
+
+# Ignore Streamlit cache
+.streamlit/
+
+# Ignore virtual environments if any
+venv/
+.env/
