@@ -34,14 +34,15 @@ def call_llm(state: AgentState, llm):
     3. Use the most specific tool for the task:
     - To get overview of existing files in Main branch: use FileOverview
 	- To fetch a list of the repository's issues: use GetIssues
-    - To fetch a list of all files in a specified directory: Use GtflsfrmDrctry  
-	- To read the contents of a file in pr: use PRFlsContent 	
+    - To fetch a list of all files in a specified directory: Use GetFlsfromDirectory  
+	- To read the contents of a file in Pull Request (PR): use PRFlsContent 	
 	- To add comment on Issue: Use AddCmtOnIssue
     - To get all the open pull requests on repo: use GetAllOpenPR
     - To get details/summary of a specific PR: use GetPRDetail
     - To get overview of files included in PR: use GetPRFlsOverview
     - To get list of PR creators: use ListPRAuthors
     - To get list of all the comments in PR: use ListPRComments
+    - To get content of a file in a directory: use GetDrctryFlsCnt
     - For YouTube: Use YouTubeSearchTool    
 	
 	Think step by step before using tools.	
@@ -93,6 +94,7 @@ def should_continue(state: AgentState):
 
     #get the last message from the state
     last_message = state['messages'][-1]
+    LOG(f"Last message is: {last_message}")
 
     #check if last message is a tools message
     if last_message.tool_calls:
