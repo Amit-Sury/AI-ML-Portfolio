@@ -97,11 +97,12 @@ def start_bot_ui():
                     st.session_state.user_id = user_input.strip()
                     if initialize_app(st, user_input.strip()) == 1:
                         st.session_state.user_id = user_input.strip()
+                        LOG("✅Session initialization completed.")
                         st.rerun()  # Reload page to show chatbot
                     else:
                         st.session_state.user_id = None
-                        LOG("Session initialization failed.")
-                        st.warning("Initialzing Session failed, please try again.")                
+                        LOG("❌Session initialization failed.")
+                        st.warning("❌Initialzing Session failed, please try again.")                
                 
             else:
                 st.warning("Please enter a valid User ID or Email.")
