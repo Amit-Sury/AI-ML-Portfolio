@@ -25,10 +25,13 @@ from tools.github_token_handler import GitTokenHandler
 #get langchain github tools which don't rely on parameters
 def get_github_tools():
     
-    LOG("Initializing github tools...")
+    LOG("Setting up langgraph github tools...")
     try: 
+             
         github = GitHubAPIWrapper()
+        LOG("Obtaining langgraph GitHubAPIWrapper success")
         toolkit = GitHubToolkit.from_github_api_wrapper(github)
+        LOG("Obtaining langgraph toolkit success")
 
         for github_tool in toolkit.get_tools():
             
@@ -52,16 +55,8 @@ def get_github_tools():
                     )
                     LOG("✅ Github Get Issues tool Initialized.")
                     
-                case "Get files from a directory":
-                    getfiles_tool = Tool(
-                        name="GtflsfrmDrctry",  # no spaces
-                        func=github_tool.run,  # original function
-                        description=github_tool.description
-                    )
-                    LOG("✅ Github Get files from a directory tool Initialized.")    
                     
-                    
-        return ( overview_tool, getissues_tool, getfiles_tool )
+        return ( overview_tool, getissues_tool)
     except Exception as e:
         LOG(f"❌ Connecting Github failed error: {e}")
         LOG(f"Github Error: {e}")
@@ -106,7 +101,7 @@ def AddCmtOnIssue(issue_number: int, comment: str):
 
         #Get the issue with issue_number
         issue = repo.get_issue(number=issue_number)
-        LOG(f"Get issue number {issue_number} on repo {os.environ["GITHUB_REPOSITORY"]} is successful")
+        LOG(f"Get issue number {issue_number} on repo {os.environ['GITHUB_REPOSITORY']} is successful")
         #create comment on the issue
         issue.create_comment(comment)
         LOG("Creating comment on the issue is successful")
@@ -466,6 +461,122 @@ def ListPRAuthors():
         return f"Operation Failed. Received exception {e} from github"
 ######################## END  ###################################    
 
+# get files present in a directory
+@tool
+def GetFlsfromDirectory(directorypath: str):
+    """
+    Returns files present in a directory recursively.
+
+    Args:
+        directorypath (str): Path of the directory for e.g., "src" or "data/subdir"
+
+    Returns:
+        dict: dictionary containing list of all the files in directory recursively:
+            - pr.number (str): Number of the PR
+            - pr_title (str): Title of the PR.
+            - pr_createdby (str): Name of the creator.            
+    """
+    
+    try: 
+        app_id = os.environ["GITHUB_APP_ID"]
+        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
+        
+        LOG("Obtaining access token...")
+        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
+        LOG("Obtaining access token is successful")
+
+        #Authenticate with your token
+        g = Github(access_token)
+        LOG("Authenticate with your token is successful")
+
+        #Get repo
+        repo_name = os.environ["GITHUB_REPOSITORY"]
+        LOG(f"Repo name is {repo_name}")
+        repo = g.get_repo(repo_name)
+        LOG(f"Get repo {repo_name} with access token is successful")
+
+        flsinDirectory = []
+        
+        lstflsRecursively(repo, directorypath, flsinDirectory)
+       
+        LOG(f"Getting files in a directory is successful: {flsinDirectory}")
+        return f"Operation Successful, here are the list of files in given directory: {flsinDirectory}"
+
+    except Exception as e:
+        LOG(f"Getting files in directory failed.") 
+        LOG(f"Received exception: {e}")   
+                    
+        return f"Operation Failed. Received exception {e} from github"
+    
+def lstflsRecursively(repo, directorypath, flsinDirectory):
+    
+    contents = repo.get_contents(directorypath)
+    for item in contents:
+        if item.type == "file":
+            flsinDirectory.append({"File:" : item.path})
+        elif item.type == "dir":
+            lstflsRecursively(repo, item.path, flsinDirectory)  
+ 
+
+######################## END  ###################################  
+
+# get content of a file in a directory
+@tool
+def GetDrctryFlsCnt(flspath: str):
+    """
+    Returns content of a file in a directory.
+
+    Args:
+        flspath (str): Path of the file for e.g., "sample.txt" or "data/subdir/sample.txt"
+
+    Returns:
+        Contents of the file            
+    """
+    
+    try: 
+        app_id = os.environ["GITHUB_APP_ID"]
+        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
+        
+        LOG("Obtaining access token...")
+        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
+        LOG("Obtaining access token is successful")
+
+        #Authenticate with your token
+        g = Github(access_token)
+        LOG("Authenticate with your token is successful")
+
+        #Get repo
+        repo_name = os.environ["GITHUB_REPOSITORY"]
+        LOG(f"Repo name is {repo_name}")
+        repo = g.get_repo(repo_name)
+        LOG(f"Get repo {repo_name} with access token is successful")
+
+        file_content = repo.get_contents(flspath)  # specify branch if needed
+
+        # decode content
+        decoded_content = file_content.decoded_content.decode("utf-8")
+       
+        LOG(f"Getting files in a directory is successful: {decoded_content}")
+        return f"Operation Successful, here are the list of files in given directory: {decoded_content}"
+
+    except Exception as e:
+        LOG(f"Getting contents of files in directory failed.") 
+        LOG(f"Received exception: {e}")   
+                    
+        return f"Operation Failed. Received exception {e} from github"
+    
+def lstflsRecursively(repo, directorypath, flsinDirectory):
+    
+    contents = repo.get_contents(directorypath)
+    for item in contents:
+        if item.type == "file":
+            flsinDirectory.append({"File:" : item.path})
+        elif item.type == "dir":
+            lstflsRecursively(repo, item.path, flsinDirectory)  
+ 
+
+######################## END  ###################################  
+
 ######This currently is not getting used in this app############
 
 # Plot graph for authors
@@ -475,7 +586,7 @@ class PRAuthors(TypedDict):
 
 
 @tool
-def github_authorsplot_tool(pr_authors: list[PRAuthors]):
+def PltPRAuthors(pr_authors: list[PRAuthors]):
     """
     Generates a plot for authors who have open the PRs.
 
