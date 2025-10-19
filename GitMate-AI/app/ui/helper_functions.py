@@ -3,8 +3,8 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 #my tools
 from tools import LOG, loadenvfile, get_github_tools
-from tools import get_youtubesearch, AddCmtOnIssue, GetPRFlsOverview
-from tools import GetAllOpenPR, GetPRDetail, PRFlsContent
+from tools import get_youtubesearch, AddCmtOnIssue, GetPRFlsOverview, GetDrctryFlsCnt
+from tools import GetAllOpenPR, GetPRDetail, PRFlsContent, GetFlsfromDirectory
 from tools import ListPRAuthors, ListPRComments
 from graph import get_llm, create_graph
 
@@ -22,13 +22,20 @@ def initialize_app(st, user_id):
     if "app" not in st.session_state:
     
         #load env file
-        loadenvfile(st)
-
-        #Get tools
-        github_tools_list = get_github_tools()
-        if github_tools_list == None:
+        if loadenvfile(st) == -1:
+            LOG("❌Error loading .env file.")
             return -1
         
+        
+        LOG("✅Loading .env file is successfully completed")   
+        #Get tools
+        github_tools_list = get_github_tools()
+
+        if github_tools_list == None:
+            LOG("❌Getting langgraph github tools failed.")
+            return -1
+        
+        LOG("Initializing all the tools...")
         tool_list = [
             *github_tools_list, #using * to unpack github tools returned by function
             AddCmtOnIssue, 
@@ -38,11 +45,19 @@ def initialize_app(st, user_id):
             GetPRFlsOverview,
             PRFlsContent,
             ListPRAuthors,
-            ListPRComments
+            ListPRComments,
+            GetFlsfromDirectory,
+            GetDrctryFlsCnt
         ] 
+        LOG("✅Tools initialization completed.")
 
         #Initialize llm
+        LOG("Initializing LLM...")
         llm = get_llm(tool_list)
+        if llm == -1:
+            LOG("❌Initializing LLM failed.")
+            return -1
+        
 
         #create graph
         st.session_state["app"] = create_graph(llm, tool_list)
@@ -51,6 +66,7 @@ def initialize_app(st, user_id):
         st.session_state["messages"] = []  #create conversation history for streamlit
         st.session_state["conversation_history"] = [] #create conversation history for LLM
         #Load history
+        LOG("Loading conversation history...")
         st.session_state["conversation_history"], st.session_state["messages"]  = read_conversation(user_id)
         
         return 1
