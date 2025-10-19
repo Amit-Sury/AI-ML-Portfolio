@@ -22,13 +22,9 @@ streamlit>=1.37.0
 # matplot lib
 matplotlib>=3.7.0
 
-# Add these two lines to the end:
-#pydantic>=2.6.0,<2.9.0
-#typing_extensions>=4.10.0
-
-
 # typing, datetime, inspect, json, os, time are stdlib
 
 # Optional utilities
 requests>=2.32.0
 tqdm>=4.66.0
+
