@@ -556,7 +556,7 @@ def GetDrctryFlsCnt(flspath: str):
         # decode content
         decoded_content = file_content.decoded_content.decode("utf-8")
        
-        LOG(f"Getting files in a directory is successful: {decoded_content}")
+        LOG(f"Getting files in a directory is successful: {decoded_content[:40]}")
         return f"Operation Successful, here are the list of files in given directory: {decoded_content}"
 
     except Exception as e:
