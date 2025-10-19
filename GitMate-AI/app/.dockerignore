@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Logs and history
+*.log
+logs/
+history/
+
+# Config / Secrets
+config/github.private-key.pem
+.env
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
