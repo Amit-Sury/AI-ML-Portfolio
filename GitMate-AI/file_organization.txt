@@ -1,11 +1,11 @@
 /app
 ├── main.py                              # Entry point 
 ├── .env                                 # Environment variables 
+├── .dockerignore                        # Exclude logs, history, .env, __pycache__, etc.
 │
 ├── docker/
 │   ├── Dockerfile                       # Container build config
 │   ├── requirements.txt                 # Dependencies
-│   └── .dockerignore                    # Exclude logs, history, .env, __pycache__, etc.
 │
 ├── ui/
 │   ├── streamlit_ui.py                  # Streamlit UI logic
@@ -30,6 +30,7 @@
 │
 └── logs/
     └── debug_2025100615.log             # Log files (dynamic, ignored in git)
+
 
 
 
