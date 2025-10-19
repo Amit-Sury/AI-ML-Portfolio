@@ -18,14 +18,23 @@ from tools import LOG
 
 ####################### Init LLM BEGIN #########################
 def get_llm(tools):
+    
     llmtype = int(os.environ["LLM_TYPE"])
-    if llmtype < 3: #Use ollama llm
+    model_id = os.environ["LLM_MODEL_ID"]
+
+    if not (1 <= llmtype <= 3):
+        LOG("❌Invalid LLM Type, it must be 1-3")
+        return -1
+    
+    if not model_id.strip(): 
+        LOG("❌Invalid Model_ID.")
+        return -1
+
+    LOG(f"LLM type={llmtype}, model_id={model_id}")
+
+    if llmtype == 1: #Use ollama llm
         try:
-            LOG("Initializing Ollama LLM")
-            if llmtype == 1:
-                model_id = 'hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF'
-            else:
-                model_id = 'hf.co/bartowski/Llama-3.2-3B-Instruct-GGUF:Q4_K_M'                                
+            LOG("Initializing Ollama LLM...")
             llm = ChatOllama(model = model_id).bind_tools(tools=tools) 
             llm.invoke("hi")
             LOG(f"✅Ollama LLM {model_id} initialization Succeeded!")
@@ -33,13 +42,12 @@ def get_llm(tools):
         except Exception as e:
             LOG(f"❌ Ollama error: {e}")
             LOG("Make sure Ollama is running: `ollama serve`")
-            LOG("And you have the model: `ollama pull llama2`")
-            exit(1)
+            LOG("And the model is downloaded")
+            return -1
 
-    elif llmtype == 3: #Use AWS bedrock llm
+    elif llmtype == 2: #Use AWS bedrock llm
         try: 
             LOG("Initializing AWS Bedrock LLM...")
-            model_id = "anthropic.claude-3-haiku-20240307-v1:0"
             bedrock_agent = boto3.client("bedrock-runtime", region_name ="us-east-1")
             llm_create = ChatBedrockConverse(
                 model=model_id,
@@ -48,29 +56,28 @@ def get_llm(tools):
                 client=bedrock_agent,
             )
             llm = llm_create.bind_tools(tools=tools)
+            llm.invoke("hi")
             LOG("✅AWS Bedrock LLM Initialization Succeeded!")
             return llm
         
         except Exception as e:
-            print(f"❌ AWS Bedrock error: {e}")
-            print("Make sure AWS related env configuration are set")
-            print("And you have the access to bedrock model")
-            exit(1)   
+            LOG(f"❌ AWS Bedrock error: {e}")
+            LOG("Make sure AWS related env configuration are set")
+            LOG("And you have the access to bedrock model")
+            return -1   
 
-    elif llmtype == 4: #Use OpenAI
+    elif llmtype == 3: #Use OpenAI
         try: 
-            LOG("Initializing OpenAI GPT gpt-5-nano model...")
-            model_id = "gpt-5-nano"
+            LOG("Initializing OpenAI model...")
             llm = ChatOpenAI(model=model_id, temperature=0).bind_tools(tools=tools)
-            #llm = llm_create.bind_tools(tools=tools)
-            LOG("✅ gpt-5-nano model Initialization Succeeded!")
+            llm.invoke("hi")
+            LOG("✅ GPT model Initialization Succeeded!")
             return llm
         
         except Exception as e:
-            print(f"❌ OpenAI LLM error: {e}")            
-            exit(1)
+            LOG(f"❌ OpenAI LLM error: {e}")
+            LOG(f"Make sure you've access to OpenAI LLM and access_key is configured in .env")            
+            return -1
 
-    else:
-        LOG("Invalid choice!")        
-        exit(1)     
+      
 ######################## END  ###################################
