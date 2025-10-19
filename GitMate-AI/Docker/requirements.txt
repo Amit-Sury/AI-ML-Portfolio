@@ -19,7 +19,14 @@ python-dotenv>=1.0.1
 # Streamlit UI
 streamlit>=1.37.0
 
-# Typing / Annotations (standard library, no install needed)
+# matplot lib
+matplotlib>=3.7.0
+
+# Add these two lines to the end:
+#pydantic>=2.6.0,<2.9.0
+#typing_extensions>=4.10.0
+
+
 # typing, datetime, inspect, json, os, time are stdlib
 
 # Optional utilities
