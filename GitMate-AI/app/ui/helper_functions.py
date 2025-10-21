@@ -22,7 +22,7 @@ def initialize_app(st, user_id):
     if "app" not in st.session_state:
     
         #load env file
-        if loadenvfile(st) == -1:
+        if loadenvfile(user_id) == -1:
             LOG("❌Error loading .env file.")
             return -1
         

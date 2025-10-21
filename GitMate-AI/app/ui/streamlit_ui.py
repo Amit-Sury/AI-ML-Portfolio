@@ -55,6 +55,7 @@ def display_chat(st):
                     }
                 </style>
                 """, unsafe_allow_html=True)
+   
     for role, msg in st.session_state["messages"]:
         
         if role == "user":
@@ -94,13 +95,13 @@ def start_bot_ui():
         if submit:
             if user_input.strip():
                 with st.spinner("Please wait, starting the session..."):
-                    st.session_state.user_id = user_input.strip()
+                    #st.session_state.user_id = user_input.strip()
                     if initialize_app(st, user_input.strip()) == 1:
                         st.session_state.user_id = user_input.strip()
                         LOG("✅Session initialization completed.")
                         st.rerun()  # Reload page to show chatbot
                     else:
-                        st.session_state.user_id = None
+                        #st.session_state.user_id = None
                         LOG("❌Session initialization failed.")
                         st.warning("❌Initialzing Session failed, please try again.")                
                 
