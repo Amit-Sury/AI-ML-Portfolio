@@ -6,7 +6,7 @@ import os
 from tools import LOG 
 ######################## END  ###################################
 
-def loadenvfile(st):
+def loadenvfile(user_id):
     """This function load the .env file"""
 
     load_dotenv()  
@@ -17,6 +17,9 @@ def loadenvfile(st):
     os.makedirs(os.environ["HISTORY_PATH"], exist_ok=True)
     os.makedirs(os.environ["LOG_PATH"], exist_ok=True)
     
+    #initializing user_id for logs
+    os.environ["user_id"] = user_id
+
     LOG("Log process started, required directories are set.")
     LOG(f"Log path:{os.environ["LOG_PATH"]} History path:{os.environ["HISTORY_PATH"]}")
     

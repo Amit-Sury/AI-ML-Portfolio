@@ -14,12 +14,13 @@ def LOG(content:str):
     if log_switch == 1:
         
         path = os.environ["LOG_PATH"]
+        user_id = os.environ["user_id"]
                         
         #get time in format yyyymmddhhmm, per minute one log file
         now = datetime.now()
         current_time = now.strftime("%Y%m%d%H")
         #filepath = os.path.join(path, f"debug_{st.session_state.user_id}_{current_time}.log")
-        filepath = os.path.join(path, f"debug_{current_time}.log")
+        filepath = os.path.join(path, f"debug_{user_id}_{current_time}.log")
         
         #get call function name
         func_name = inspect.currentframe().f_back.f_code.co_name  # caller function
