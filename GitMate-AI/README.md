@@ -28,7 +28,7 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 
 # ⚙️ Prerequisites
 - This app is built using Python and uses **Langgraph**, **Langgchain**, **Pygithub**, **Streamlit** and flexible LLM models (**Bedrock**, **OpenAI**, **Ollama**). 
-- Refer [requirements.txt](./Docker/requirements.txt) for comprehensive list of dependecies. Ensure you have installed all the required dependencies.
+- Refer [requirements.txt](./app/Docker/requirements.txt) for comprehensive list of dependecies. Ensure you have installed all the required dependencies.
   > 💡 *Use pip command to install packages:*
   ```
   pip install -r docker/requirements.txt
