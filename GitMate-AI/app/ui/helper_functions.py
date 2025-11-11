@@ -86,8 +86,8 @@ def write_convo(llm_conversation, user_id):
                 {
                     "type": "user" if isinstance(msg, HumanMessage) else "assistant",
                     "content": msg.content,
-                    "additional_kwargs": msg.additional_kwargs,
-                    "response_metadata": msg.response_metadata,
+                    "additional_kwargs": msg.additional_kwargs, #Currently code is not storing this in session
+                    "response_metadata": msg.response_metadata, #Currently code is not storing this in session
                 }
                 for msg in llm_conversation
             ],
