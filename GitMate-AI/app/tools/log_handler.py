@@ -9,6 +9,9 @@ import json
 def LOG(content:str):
     """This function writes logs"""
     
+    if not os.getenv("DEBUG_LOG"):
+            os.environ["DEBUG_LOG"] = "1"
+    
     log_switch = int(os.environ["DEBUG_LOG"])
 
     if log_switch == 1:

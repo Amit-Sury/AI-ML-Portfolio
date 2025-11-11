@@ -550,6 +550,8 @@ def GetDrctryFlsCnt(flspath: str):
         LOG(f"Repo name is {repo_name}")
         repo = g.get_repo(repo_name)
         LOG(f"Get repo {repo_name} with access token is successful")
+        
+        LOG(f"Getting contents of file: {flspath}...")
 
         file_content = repo.get_contents(flspath)  # specify branch if needed
 
