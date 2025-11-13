@@ -7,10 +7,10 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ## 📂 Projects
 
-### 1. 🤖 [GitMate.AI](./GitMate-AI)
+### 1. 🤖 [GitMate-AI](./GitMate-AI)
   
 ### *Intelligent GitHub Assistant — powered by Agentic AI*
-- **Goal**: GitMate.AI is an **AI-powered** assistant that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent, **agentic automation**.
+- **Goal**: GitMate-AI is an **AI-powered** assistant that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent, **agentic automation**.
 - **Tech Stack**: LangChain + LangGraph (for agentic flow orchestration), PyGithub (GitHub API integration), Python, Boto3, Streamlit, AWS-Bedrock/Ollama/OpenAI (flexible LLM backends)
 - **Highlights**:
   - 🧠 **Understands and summarizes PRs** — Get concise overviews of the latest pull requests.
@@ -18,7 +18,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - ⚙️ **Automates GitHub workflows** — Uses LangGraph, LangChain, and PyGithub for deep repository insights.
   - 🌐 **Deployable across environments** — Works with AWS Bedrock, OpenAI, or local LLMs (Ollama).
   - 🖥️ **Interactive Streamlit UI** — Offers a clean and intuitive user experience.
-- **Demo/Script**: [Link to GitMate.AI Scripts](./GitMate-AI/app/)
+- **Demo/Script**: [Link to GitMate-AI Scripts](./GitMate-AI/app/)
 ---
 
 ### 2. [AWS-RAG](./AWS-RAG)
