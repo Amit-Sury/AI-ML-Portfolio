@@ -5,7 +5,8 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 
 ---
 ## 🧩 Architecture (AWS)
----
+<img width="1280" height="720" alt="GitMate-AI Architecture" src="https://github.com/user-attachments/assets/c3012c6d-e8ae-4935-8f02-a80c5d926b7b" />
+
 
  # 📁 File Organization
 - Refer [file_organization.txt](./file_organization.txt) for more details.
@@ -64,14 +65,13 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
    | Category       | Description                                                                 |
    |----------------|-----------------------------------------------------------------------------|
    | GitHub Configs | App ID, Private Key path, Repository name                                   |
-   | LLM Config     | Type of LLM backend to use (Ollama, Bedrock, GPT, etc.)                     |
+   | LLM Config     | Type of LLM backend to use (Ollama, Bedrock, GPT, etc.), Model ID           |
    | API Keys       | OpenAI API key or other LLM keys if applicable                              |
    | Logging        | Paths for conversation history, logs, debug settings                        |
    | Optional Flags | Enable/disable LangChain message logging, debug mode                        |
 
    > **Note:** Replace placeholders with your actual credentials and paths.
-  - **Step 4:** Update `model_id` in `/graph/init_llm.py`:
-  - **Step 5:** Run the App using following command:
+   - **Step 4:** Run the App using following command:
     ```
     streamlit run main.py
     ```
