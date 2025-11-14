@@ -5,7 +5,14 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 
 ---
 ## 🧩 Architecture (AWS)
+- The application is deployed inside a dedicated VPC spanning two Availability Zones. Each subnet hosts EC2 instances that runs App containers.
+- Traffic enters through an internet-facing **Application Load Balancer (ALB)**, which distributes requests across the EC2 fleet using round-robin routing.
+- The compute layer is managed by an **Auto Scaling Group (ASG)** backed by a Launch Template, to ensure high availability and elasticity.
+- During bootstrapping, each EC2 instance retrieves runtime configuration from **AWS SSM Parameter Store**, and pulls the required Docker image from **AWS ECR** via user data. 
+- Whole infrastructure components—including VPC, networking and compute are **provisioned through AWS CloudFormation**.
 <img width="1280" height="720" alt="GitMate-AI Architecture" src="https://github.com/user-attachments/assets/c3012c6d-e8ae-4935-8f02-a80c5d926b7b" />
+
+
 
 
  # 📁 File Organization
