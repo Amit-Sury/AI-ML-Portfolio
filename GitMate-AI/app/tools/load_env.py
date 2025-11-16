@@ -3,7 +3,7 @@ from dotenv import load_dotenv
 import os
 
 #my packages
-from tools import LOG 
+from tools import LOG, set_contextvar_userid 
 ######################## END  ###################################
 
 def loadenvfile(user_id):
@@ -25,8 +25,8 @@ def loadenvfile(user_id):
         os.makedirs(os.environ["LOG_PATH"], exist_ok=True)
         
         #initializing user_id for logs
-        os.environ["user_id"] = user_id
-
+        set_contextvar_userid(user_id)
+        
         LOG("Log process started, required directories are set.")
         LOG(f"Log path:{os.environ["LOG_PATH"]} History path:{os.environ["HISTORY_PATH"]}")
         

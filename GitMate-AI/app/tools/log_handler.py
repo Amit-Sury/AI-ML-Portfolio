@@ -4,6 +4,7 @@ from datetime import datetime
 import inspect
 from langchain_core.messages import HumanMessage, AIMessage, ToolMessage, SystemMessage
 import json
+from tools import get_contextvar_userid
 ######################## END  ###################################
 
 def LOG(content:str):
@@ -17,12 +18,11 @@ def LOG(content:str):
     if log_switch == 1:
         
         path = os.environ["LOG_PATH"]
-        user_id = os.environ["user_id"]
+        user_id = get_contextvar_userid()
                         
         #get time in format yyyymmddhhmm, per minute one log file
         now = datetime.now()
         current_time = now.strftime("%Y%m%d%H")
-        #filepath = os.path.join(path, f"debug_{st.session_state.user_id}_{current_time}.log")
         filepath = os.path.join(path, f"debug_{user_id}_{current_time}.log")
         
         #get call function name
@@ -60,6 +60,9 @@ def message_to_dict(msg):
 def pretty_print_messages(messages,user_id):
     """Pretty print a list of LangChain messages."""
     
+    if not os.getenv("WRITE_LANGCHAIN_MSGS"):
+            os.environ["WRITE_LANGCHAIN_MSGS"] = "1"
+
     write_langchain_msg = int(os.environ["WRITE_LANGCHAIN_MSGS"])
 
     if write_langchain_msg == 1:
