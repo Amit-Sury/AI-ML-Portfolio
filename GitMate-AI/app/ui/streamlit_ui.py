@@ -11,9 +11,8 @@ import json
 
 #import my functions
 from graph import execute_graph
-from tools import LOG
+from tools import LOG, set_contextvar_userid
 from ui import write_convo, initialize_app
-
 
 ######################## END  ###################################
 
@@ -82,6 +81,8 @@ def start_bot_ui():
     # Initialize session state
     if "user_id" not in st.session_state:
         st.session_state.user_id = None
+    else:
+        set_contextvar_userid(st.session_state.user_id)        
 
     #Ask for user ID or email if not provided
     if st.session_state.user_id is None:
@@ -97,7 +98,7 @@ def start_bot_ui():
                 with st.spinner("Please wait, starting the session..."):
                     #st.session_state.user_id = user_input.strip()
                     if initialize_app(st, user_input.strip()) == 1:
-                        st.session_state.user_id = user_input.strip()
+                        st.session_state.user_id = user_input.strip()                        
                         LOG("✅Session initialization completed.")
                         st.rerun()  # Reload page to show chatbot
                     else:
