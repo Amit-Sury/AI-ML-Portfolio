@@ -72,7 +72,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     - **Embedding model link**: https://hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
     - **Language model link**: https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
 
-- **Deployment/Code Details**: [Visit Local-RAG Page](./Local-RAG/Script/local-rag-indexing.py)
+- **Deployment/Code Details**: [Visit Local-RAG Page](./Local-RAG/)
   
 ---
 
