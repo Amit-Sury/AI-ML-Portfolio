@@ -7,29 +7,31 @@
 │   ├── Dockerfile                       # Container build config
 │   ├── requirements.txt                 # Dependencies
 │
-├── ui/
-│   ├── streamlit_ui.py                  # Streamlit UI logic
-│   └── helper_functions.py              # UI + graph + LLM helper utilities
+├── config/
+│   └── github.private-key.pem           # GitHub App private key (add to .gitignore)
 │
 ├── graph/
 │   ├── graph.py                         # LangGraph workflow orchestration
 │   └── init_llm.py                      # LLM initialization logic
-│
+|
 ├── tools/
-│   ├── github_tools.py                  # GitHub API & LangGraph tools
+│   ├── contextvars.py                   # Utility to store context variables
 │   ├── github_token_handler.py          # Token management singleton
-│   ├── youtube_tools.py                 # YouTube search API tool, just for fun
-│   ├── log_handler.py                   # Central logging utility
+│   ├── github_tools.py                  # GitHub API & LangGraph tools
 │   └── load_env.py                      # Env loading helper
-│
-├── config/
-│   └── github.private-key.pem           # GitHub App private key (add to .gitignore)
+│   ├── log_handler.py                   # Central logging utility
+│   ├── youtube_tools.py                 # YouTube search API tool, just for fun
+|
+├── ui/
+│   └── helper_functions.py              # UI + graph + LLM helper utilities
+│   ├── streamlit_ui.py                  # Streamlit UI logic
 │
 ├── history/
 │   └── conv_history_userid.json         # Conversation history (dynamic, ignored in git)
 │
 └── logs/
     └── debug_2025100615.log             # Log files (dynamic, ignored in git)
+
 
 
 
