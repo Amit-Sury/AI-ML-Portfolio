@@ -1,0 +1,415 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: This is cloudformation script to deploy the GitMate-AI app in AWS
+
+####################### Parameter Block BEGIN ###################################
+Parameters:
+  PrefixName:
+    Description: This is the prefix to use for all the resources
+    Type: String
+    Default: GitMateAI
+
+  #Network Settings
+  VPCCidr:
+    Description: VPC Cidr block
+    Type: String
+    Default: 10.0.1.0/26
+
+  Subnet1Cidr:
+    Description: Subnet 1 Cidr block
+    Type: String
+    Default: 10.0.1.0/27
+
+  Subnet2Cidr:
+    Description: Subnet 2 Cidr block
+    Type: String
+    Default: 10.0.1.32/27
+
+  Subnet1AZ:
+    Description: Availability zone of Subnet 1
+    Type: String
+    Default: ap-south-1a #using Asia pacific region 
+
+  Subnet2AZ:
+    Description: Availability zone of Subnet 2
+    Type: String
+    Default: ap-south-1b #using Asia pacific region
+
+  #Compute Settings
+  InstanceType:
+    Description: Instance type
+    Type: String
+    Default: t3.micro
+
+  InstanceAMI:
+    Description: AMI of instance
+    Type: String
+    Default: ami-03695d52f0d883f65 #Amazon AMI, free-tier eligible
+
+  Keypair:
+    Description: Instance key-pair for remote login
+    Type: AWS::EC2::KeyPair::KeyName
+    Default: GitMate
+
+  InstanceIAMProfile:
+    Description: EC2 instance profile providing access to Bedrock, SSM Parameter Store & ECR
+    Type: String
+    Default: GitMateAI-EC2InstanceProfile #Provide the name of the instance profile
+
+  ECRRepositoryURL:
+    Type: String
+    Description: ECR Repository URL for GitMate-AI Image. Used in UserData in launch
+      template to pull docker image.
+    Default: 1111111111.dkr.ecr.ap-south-1.amazonaws.com
+
+  AWSRegion:
+    Type: String
+    Description: AWS Region of parameter store. Used in UserData in launch template
+      to pull docker image.
+    Default: ap-south-1
+
+######################## END  ###################################
+
+################ Resource Block BEGIN ###########################
+Resources:
+  #Network Resource Definitions 
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-vpc.html
+  VPC:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: !Ref VPCCidr
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-VPC
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-subnet.html
+  Subnet1:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref Subnet1Cidr
+      AvailabilityZone: !Ref Subnet1AZ
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-Subnet1
+
+  Subnet2:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref VPC
+      CidrBlock: !Ref Subnet2Cidr
+      AvailabilityZone: !Ref Subnet2AZ
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-Subnet2
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-internetgateway.html
+  InternetGW:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: ${PrefixName}-Igw
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-vpcgatewayattachment.html 
+  VpcIgwAssociation:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      InternetGatewayId: !Ref InternetGW
+      VpcId: !Ref VPC
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-networkacl.html
+  NACL:
+    Type: AWS::EC2::NetworkAcl
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-Nacl
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-networkaclentry.html
+  NaclInboundEntryHTTP:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      Egress: false
+      RuleNumber: 200
+      Protocol: 6
+      PortRange:
+        From: 8501
+        To: 8501
+      RuleAction: Allow
+      CidrBlock: 0.0.0.0/0
+
+  NaclInboundEntryEphemeral:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      Egress: false
+      RuleNumber: 300
+      Protocol: 6
+      PortRange:
+        From: 1024
+        To: 65535
+      RuleAction: Allow
+      CidrBlock: 0.0.0.0/0
+
+  NaclOutboundEntry:
+    Type: AWS::EC2::NetworkAclEntry
+    Properties:
+      NetworkAclId: !Ref NACL
+      Egress: true
+      RuleNumber: 100
+      Protocol: -1
+      RuleAction: Allow
+      CidrBlock: 0.0.0.0/0
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-subnetnetworkaclassociation.html
+  Subnet1NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      NetworkAclId: !Ref NACL
+
+  Subnet2NaclAssociation:
+    Type: AWS::EC2::SubnetNetworkAclAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      NetworkAclId: !Ref NACL
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-routetable.html
+  Routetable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref VPC
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-Routetab
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-route.html  
+  RoutetableEntry:
+    Type: AWS::EC2::Route
+    Properties:
+      RouteTableId: !Ref Routetable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGW
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-subnetroutetableassociation.html  
+  Subnet1RouteTabAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet1
+      RouteTableId: !Ref Routetable
+
+  Subnet2RouteTabAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref Subnet2
+      RouteTableId: !Ref Routetable
+
+  #Compute Resource Definitions
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-ec2-launchtemplate.html
+  LaunchTemplate:
+    Type: AWS::EC2::LaunchTemplate
+    Properties:
+      LaunchTemplateName: !Sub ${PrefixName}-launch-template
+      LaunchTemplateData:
+        ImageId: !Ref InstanceAMI
+        InstanceType: !Ref InstanceType
+        KeyName: !Ref Keypair
+        IamInstanceProfile:
+          Name: !Ref InstanceIAMProfile
+        NetworkInterfaces:
+          - AssociatePublicIpAddress: true
+            DeviceIndex: 0
+            Groups:
+              - !Ref InstanceSecurityGroup
+        TagSpecifications:
+          - ResourceType: instance
+            Tags:
+              - Key: GroupName
+                Value: GitMateAI_Instance
+        UserData: !Base64
+          Fn::Sub: |
+            #! /bin/bash
+            sudo yum update -y
+            sudo dnf install docker -y
+            sudo systemctl enable docker
+            sudo systemctl start docker
+            sudo usermod -aG docker ec2-user
+
+            aws ssm get-parameters --region ${AWSRegion} --names \
+                " /gitmate-ai/GITHUB_APP_ID" \
+                " /gitmate-ai/GITHUB_REPOSITORY" \
+                " /gitmate-ai/OPENAI_API_KEY" \
+                " /gitmate-ai/LLM_TYPE" \
+                " /gitmate-ai/LLM_MODEL_ID" \
+                " /gitmate-ai/BASE_URL" \
+                " /gitmate-ai/AWS_REGION" \
+                " /gitmate-ai/HISTORY_PATH" \
+                " /gitmate-ai/LOG_PATH" \
+                --with-decryption \
+                --query "Parameters[].{Name:Name,Value:Value}" > /home/ec2-user/tmp.params1.json
+
+            aws ssm get-parameters --region ${AWSRegion} --names \
+                " /gitmate-ai/DEBUG_LOG" \
+                " /gitmate-ai/WRITE_LANGCHAIN_MSGS" \
+                " /gitmate-ai/LANGCHAIN_TRACING_V2" \
+                " /gitmate-ai/LANGCHAIN_API_KEY" \
+                " /gitmate-ai/LANGCHAIN_PROJECT" \
+                " /gitmate-ai/LANGCHAIN_ENDPOINT" \
+                --with-decryption \
+                --query "Parameters[].{Name:Name,Value:Value}" > /home/ec2-user/tmp.params2.json
+
+            jq -s 'add' /home/ec2-user/tmp.params1.json /home/ec2-user/tmp.params2.json > /home/ec2-user/tmp.params.json
+
+            # convert params.json -> .env (simple jq example)
+            jq -r '.[] | "\(.Name)=\(.Value)"' /home/ec2-user/tmp.params.json | sed 's|^ /gitmate-ai/||' > /home/ec2-user/temp.env
+
+            mkdir /home/ec2-user/config
+
+            #get app private key and put it in a .pem file
+            aws ssm get-parameter --region ${AWSRegion} --name \
+                " /gitmate-ai/GITHUB_APP_PRIVATE_KEY" \
+                --with-decryption \
+                --query "Parameter.Value" \
+                --output text > /home/ec2-user/config/github.private-key.pem
+
+            #add private key file path to .env
+            (echo "GITHUB_APP_PRIVATE_KEY=./config/github.private-key.pem"; cat /home/ec2-user/temp.env) >> /home/ec2-user/.env
+
+            #clean tmp files
+            rm /home/ec2-user/tmp.params*.json /home/ec2-user/temp.env
+
+            #get ecr login password and login to ecr
+            aws ecr get-login-password --region ${AWSRegion} | docker login --username AWS --password-stdin ${ECRRepositoryURL}
+
+            #pull gitmate-ai docker image
+            docker pull ${ECRRepositoryURL}/gitmate-ai:latest
+
+            docker run -d --name gitmate-app \
+              -p 8501:8501 \
+              --env-file /home/ec2-user/.env \
+              -v /home/ec2-user/config:/app/config \
+              -v /home/ec2-user/logs:/app/logs \
+              -v /home/ec2-user/history:/app/history \
+              ${ECRRepositoryURL}/gitmate-ai
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-InstanceSecGrp
+      GroupDescription: Security Group for App Instances
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: 6
+          FromPort: 8501
+          ToPort: 8501
+          SourceSecurityGroupId: !Ref LoadBalancerSecurityGroup
+      SecurityGroupEgress:
+        - IpProtocol: 6
+          FromPort: 443
+          ToPort: 443
+          CidrIp: 0.0.0.0/0
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-autoscaling-autoscalinggroup.html
+  AutoscalingGrp:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      AutoScalingGroupName: !Sub ${PrefixName}-Asg
+      LaunchTemplate:
+        LaunchTemplateId: !Ref LaunchTemplate
+        Version: !GetAtt LaunchTemplate.LatestVersionNumber
+      MaxSize: '4'
+      MinSize: '2'
+      DesiredCapacity: '2'
+      TargetGroupARNs:
+        - !Ref LoadBalancerTargetGrp
+      VPCZoneIdentifier:
+        - !Ref Subnet1
+        - !Ref Subnet2
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-autoscaling-scalingpolicy.html
+  AutoscalingPolicy:
+    Type: AWS::AutoScaling::ScalingPolicy
+    Properties:
+      AutoScalingGroupName: !Ref AutoscalingGrp
+      PolicyType: TargetTrackingScaling
+      TargetTrackingConfiguration:
+        PredefinedMetricSpecification:
+          PredefinedMetricType: ASGAverageCPUUtilization
+        TargetValue: 70
+        DisableScaleIn: true # This prevents scale-in actions
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-targetgroup.html 
+  LoadBalancerTargetGrp:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Name: !Sub ${PrefixName}-TargetGrp
+      VpcId: !Ref VPC
+      TargetType: instance
+      HealthCheckEnabled: true
+      HealthCheckIntervalSeconds: 10
+      #HealthCheckPath: "/" #This is default value, mentioning just for ref
+      #HealthCheckPort: "8501" #Default is traffic-port, which is the port on which each target receives traffic from the load balancer.
+      IpAddressType: ipv4
+      Protocol: HTTP
+      Port: 8501
+      ProtocolVersion: HTTP1
+      TargetGroupAttributes:
+        - Key: load_balancing.cross_zone.enabled
+          Value: true
+        - Key: load_balancing.algorithm.type
+          Value: round_robin
+        - Key: stickiness.enabled
+          Value: "true"
+        - Key: stickiness.type
+          Value: lb_cookie
+        - Key: stickiness.lb_cookie.duration_seconds
+          Value: "3600"          
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-loadbalancer.html
+  LoadBalancer:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      Name: !Sub ${PrefixName}-ALB
+      Subnets:
+        - !Ref Subnet1
+        - !Ref Subnet2
+      SecurityGroups:
+        - !Ref LoadBalancerSecurityGroup
+      Scheme: internet-facing
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-resource-elasticloadbalancingv2-listener.html
+  LoadBalancerListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      Port: 8501
+      Protocol: HTTP
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref LoadBalancerTargetGrp
+      LoadBalancerArn: !Ref LoadBalancer
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-ec2-securitygroup.html 
+  LoadBalancerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-LBSecGrp
+      GroupDescription: Load balancer Security Group
+      VpcId: !Ref VPC
+      SecurityGroupIngress:
+        - IpProtocol: 6
+          FromPort: 8501
+          ToPort: 8501
+          CidrIp: 0.0.0.0/0
+      SecurityGroupEgress:
+        - IpProtocol: 6
+          FromPort: 8501
+          ToPort: 8501
+          CidrIp: 0.0.0.0/0
+
+##################### Resource Block END #####################
