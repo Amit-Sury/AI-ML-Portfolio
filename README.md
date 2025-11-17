@@ -33,7 +33,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     - 🗃️ Overview of files included in a PR
     - 🧑‍💻 List all PR authors
     - 🗨️ Fetch all comments inside a PR
-- **Demo/Script**: [Link to GitMate-AI Scripts](./GitMate-AI/app/)
+- **Deployment/Code Details**: [Visit GitMate-AI Page](./GitMate-AI/)
 ---
 
 ### 2. [AWS-RAG](./AWS-RAG)
@@ -44,7 +44,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Designed a **knowledge base pipeline** leveraging S3 and OpenSearch for scalable document storage and retrieval.
   - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capability**.
   - Built an **interactive UI with Streamlit** for seamless user interaction.
-- **Demo/Script**: [Link to Chatbot UI Script](./AWS-RAG/Script/aws-rag-chatbot.py)
+- **Deployment/Code Details**: [Visit AWS-RAG Page](./AWS-RAG/)
 
 ---
 
@@ -56,7 +56,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Applied preprocessing and data augmentation (rotation, flipping, normalization) to improve model generalization.  
   - Leveraged **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
   - Deployed the model on **AWS SageMaker** for inference. 
-- **Demo/Notebook**: [Link to Jupyter Notebook](./CNN/Notebook/cnn-tensorflow-sagemaker.ipynb)
+- **Deployment/Code Details**: [Visit CNN page](./CNN/)
 
 ---
 
@@ -72,9 +72,8 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     - **Embedding model link**: https://hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
     - **Language model link**: https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
 
-- **Demo/Script**:
-  - [Link to Indexing Script](./Local-RAG/Script/local-rag-indexing.py)
-  - [Link to Chatbot UI Script](./Local-RAG/Script/local-rag-chatbot.py)
+- **Deployment/Code Details**: [Visit Local-RAG Page](./Local-RAG/Script/local-rag-indexing.py)
+  
 ---
 
 ## 🛠️ Tools & Technologies
