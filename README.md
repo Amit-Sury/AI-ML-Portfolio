@@ -15,9 +15,24 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 - **Highlights**:
   - 🧠 **Understands and summarizes PRs** — Get concise overviews of the latest pull requests.
   - 🗨️ **Fetches file contents & issue details** — Retrieve, read, and analyze files or discussions directly.
-  - ⚙️ **Automates GitHub workflows** — Uses LangGraph, LangChain, and PyGithub for deep repository insights.
-  - 🌐 **Deployable across environments** — Works with AWS Bedrock, OpenAI, or local LLMs (Ollama).
+  - ⚙️ **Automates GitHub workflows** — Uses **LangGraph, LangChain, and PyGithub** for deep repository insights.
+  - 🌐 **Deployable across environments** — Works with **AWS Bedrock, OpenAI, or local LLMs (Ollama).**
   - 🖥️ **Interactive Streamlit UI** — Offers a clean and intuitive user experience.
+- **⭐ Key Features (Agentic Tooling Capabilities)**
+  - 📁 Repository & File Intelligence
+    - 🔍 Overview of all files in the main branch
+    - 🗂️ List all files inside any directory
+    - 📄 Fetch the content of any file from a directory
+    - 🧾 Read file contents directly from a Pull Request
+  - 🐛 Issue Management
+    - 📝 Fetch all repository issues
+    - 💬 Add comments to specific issues
+    - 🔀 Pull Request Analysis
+    - 🚦 List all open Pull Requests
+  - 🧠 Get detailed insights & summaries for any PR
+    - 🗃️ Overview of files included in a PR
+    - 🧑‍💻 List all PR authors
+    - 🗨️ Fetch all comments inside a PR
 - **Demo/Script**: [Link to GitMate-AI Scripts](./GitMate-AI/app/)
 ---
 
