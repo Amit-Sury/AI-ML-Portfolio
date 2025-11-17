@@ -59,7 +59,7 @@ Parameters:
     Type: String
     Description: ECR Repository URL for GitMate-AI Image. Used in UserData in launch
       template to pull docker image.
-    Default: 1111111111.dkr.ecr.ap-south-1.amazonaws.com
+    Default: **********.dkr.ecr.ap-south-1.amazonaws.com
 
   AWSRegion:
     Type: String
