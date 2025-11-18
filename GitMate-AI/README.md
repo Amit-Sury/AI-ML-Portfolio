@@ -108,5 +108,7 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
  └── /history/              # Conversation and user session history (dynamically created)
 
 ```
+[![License: CC BY-NC 4.0](https://img.shields.io/badge/License-CC_BY--NC_4.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc/4.0/)
+
 
 ---
