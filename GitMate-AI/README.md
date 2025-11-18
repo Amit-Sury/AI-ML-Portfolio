@@ -5,7 +5,8 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 
 ---
 ## 🔁 Call Flow
-<img width="1044" height="429" alt="image" src="https://github.com/user-attachments/assets/562a5add-0ee8-4556-a677-74a3f2781fcd" />
+<img width="1046" height="410" alt="image" src="https://github.com/user-attachments/assets/d20554e0-25dd-4b38-bf29-05408290dc67" />
+
 
 ---
 ## 🧩 Architecture (AWS)
