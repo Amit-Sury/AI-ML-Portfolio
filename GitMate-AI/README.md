@@ -4,6 +4,10 @@
 GitMate.AI is an AI-powered assistant that integrates directly with GitHub to help you analyze pull requests, manage issues, and streamline repository insights — all through intelligent, agentic automation built with **LangGraph, LangChain, and Streamlit**.
 
 ---
+## 🔁 Call Flow
+<img width="1044" height="429" alt="image" src="https://github.com/user-attachments/assets/562a5add-0ee8-4556-a677-74a3f2781fcd" />
+
+---
 ## 🧩 Architecture (AWS)
 <img width="1280" height="720" alt="GitMate-AI Architecture" src="https://github.com/user-attachments/assets/51241c4d-95cd-4684-84c0-890bf31e4e6b" />
 
