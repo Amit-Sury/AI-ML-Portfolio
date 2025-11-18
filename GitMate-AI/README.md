@@ -4,12 +4,47 @@
 GitMate.AI is an AI-powered assistant that integrates directly with GitHub to help you analyze pull requests, manage issues, and streamline repository insights — all through intelligent, agentic automation built with **LangGraph, LangChain, and Streamlit**.
 
 ---
-## 🔁 Call Flow
+## 🔁 Agentic Execution Flow
 <img width="1046" height="410" alt="image" src="https://github.com/user-attachments/assets/d20554e0-25dd-4b38-bf29-05408290dc67" />
 
 
+
 ---
-## 🧩 Architecture (AWS)
+## 📊 Sequence Diagram
+```mermaid
+sequenceDiagram
+    participant User
+    participant StreamlitUI
+    participant LangGraph
+    participant LLM
+    participant Tools
+
+    User->>StreamlitUI: Enter query and submit
+    StreamlitUI->>LangGraph: invoke with user_id and messages
+    LangGraph->>LLM: call_llm(state)
+
+    alt LLM uses tools
+        LLM-->>LangGraph: tool calls
+        LangGraph->>Tools: execute tools with arguments
+        Tools-->>LangGraph: tool results
+        LangGraph->>LangGraph: should_continue?
+
+        alt continue is true
+            LangGraph->>LLM: call_llm with updated state
+            Note over LangGraph,LLM: Loop until final answer
+        else continue is false
+            LangGraph-->>StreamlitUI: final response
+            StreamlitUI-->>User: display answer
+        end    
+    else LLM answers directly
+        LLM-->>LangGraph: final text response
+        LangGraph-->>StreamlitUI: final response
+        StreamlitUI-->>User: display answer
+    end
+```
+
+---
+## 🧩 Deployment Architecture (AWS)
 <img width="1280" height="720" alt="GitMate-AI Architecture" src="https://github.com/user-attachments/assets/51241c4d-95cd-4684-84c0-890bf31e4e6b" />
 
 - GitMate-AI App runs inside a dedicated VPC spanning two Availability Zones. Each subnet hosts EC2 instances that runs App containers.
