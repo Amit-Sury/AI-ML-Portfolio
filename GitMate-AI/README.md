@@ -5,7 +5,8 @@ GitMate.AI is an AI-powered assistant that integrates directly with GitHub to he
 
 ---
 ## 🔁 Agentic Execution Flow
-<img width="1046" height="410" alt="image" src="https://github.com/user-attachments/assets/d20554e0-25dd-4b38-bf29-05408290dc67" />
+<img width="1054" height="406" alt="image" src="https://github.com/user-attachments/assets/8b8d8843-ad8d-464e-bb8a-5669bd69519e" />
+
 
 
 
