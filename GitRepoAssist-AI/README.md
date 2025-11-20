@@ -101,15 +101,15 @@ sequenceDiagram
       - AWS Bedrock
       - ECR
       - SSM Parameter Store
-  - **Step 4** Download `gitmateai_aws_deploy.sh`, `gitmateai_deploy.yaml`, `gitmateai_aws_delete.sh` from [Scripts](.app/Scripts) folder to a temporary local folder.
+  - **Step 4** Download `gitrepoassistai_aws_deploy.sh`, `gitrepoassistai_deploy.yaml`, `gitrepoassistai_aws_delete.sh` from [Scripts](.app/Scripts) folder to a temporary local folder.
   - **Step 5** Copy your Github APP `private_key.pem` file into the same temporary folder. In case you want to use OpenAI then add your OpenAI API key to a file named `openai.key`, otherwise just create a openai.key file with some dummy text. 
-  - **Step 6** Edit `gitmateai_aws_deploy.sh` and update the `VARIABLES BLOCK` as per your preference. `AWS_ACCOUNT_ID, AWS_REGION, KEY_PAIR, EC2_IAM_PROFILE, GITHUB_APP_ID, GITHUB_REPOSITORY, GITHUB_APP_PRIVATEKEY_PATH, OPENAI_API_KEY_PATH, LLM_TYPE, LLM_MODEL_ID` must be updated.  
-  - **Step 7:** Deploy the app by executing `./gitmateai_aws_deploy.sh`. 
+  - **Step 6** Edit `gitrepoassistai_aws_deploy.sh` and update the `VARIABLES BLOCK` as per your preference. `AWS_ACCOUNT_ID, AWS_REGION, KEY_PAIR, EC2_IAM_PROFILE, GITHUB_APP_ID, GITHUB_REPOSITORY, GITHUB_APP_PRIVATEKEY_PATH, OPENAI_API_KEY_PATH, LLM_TYPE, LLM_MODEL_ID` must be updated.  
+  - **Step 7:** Deploy the app by executing `./gitrepoassistai_aws_deploy.sh`. 
   - **Step 8** After deployment, log in to the AWS Console → EC2 → Load Balancers, and copy the Load Balancer DNS name. Open it in your browser:
    ```
    http://<load-balancer-url>:8501
    ``` 
-  - - **Step 9** To delete all deployed AWS resources, run `./gitmateai_aws_delete.sh`. Make sure to update the `AWS_REGION` in the delete script before running it. 
+  - - **Step 9** To delete all deployed AWS resources, run `./gitrepoassistai_aws_delete.sh`. Make sure to update the `AWS_REGION` in the delete script before running it. 
        
 - **Local Deployment**
   - **Step 1:** Copy the entire project folder [app](./app) to your local machine or server.
