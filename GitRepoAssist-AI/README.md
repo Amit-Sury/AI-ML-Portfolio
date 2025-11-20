@@ -94,7 +94,7 @@ sequenceDiagram
   - **Step 1:** Download the entire project folder [app](./app) to your local machine or server in a separate folder.
   - **Step 2:** In a terminal, navigate into the `/app` folder and build the Docker image:
   ```
-    docker build --no-cache -f docker/Dockerfile -t gitmate-ai .
+    docker build --no-cache -f docker/Dockerfile -t gitrepoassist-ai .
   ```
   - **Step 3** Login to AWS Console and create:
     - An EC2 key pair in your desired region.
