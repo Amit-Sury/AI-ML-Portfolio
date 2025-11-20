@@ -48,9 +48,11 @@ sequenceDiagram
 
 ---
 ## 🧩 Deployment Architecture (AWS)
-<img width="1280" height="720" alt="GitMate-AI Architecture" src="https://github.com/user-attachments/assets/51241c4d-95cd-4684-84c0-890bf31e4e6b" />
+<img width="1247" height="667" alt="image" src="https://github.com/user-attachments/assets/95bc70e6-2cef-4d1d-a85d-fe94050d3dc1" />
 
-- GitMate-AI App runs inside a dedicated VPC spanning two Availability Zones. Each subnet hosts EC2 instances that runs App containers.
+
+
+- GitRepoAssist-AI App runs inside a dedicated VPC spanning two Availability Zones. Each subnet hosts EC2 instances that runs App containers.
 - Traffic enters through an internet-facing **Application Load Balancer (ALB)**, which distributes requests across the EC2 fleet using round-robin routing.
 - The compute layer is managed by an **Auto Scaling Group (ASG)** backed by a Launch Template, to ensure high availability and elasticity.
 - During bootstrapping, each EC2 instance retrieves runtime configuration from **AWS SSM Parameter Store**, and pulls the required Docker image from **AWS ECR** via user data. 
