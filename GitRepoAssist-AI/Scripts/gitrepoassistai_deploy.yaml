@@ -55,18 +55,6 @@ Parameters:
     Type: String
     Default: GitRepoAssist-AI-EC2InstanceProfile #Provide the name of the instance profile
 
-  ECRRepositoryURL:
-    Type: String
-    Description: ECR Repository URL for GitRepoAssist-AI image. Used in UserData in launch
-      template to pull docker image.
-    Default: ************.dkr.ecr.ap-south-1.amazonaws.com
-
-  AWSRegion:
-    Type: String
-    Description: AWS Region of parameter store. Used in UserData in launch template
-      to pull docker image.
-    Default: ap-south-1
-
 ######################## END  ###################################
 
 ################ Resource Block BEGIN ###########################
@@ -227,7 +215,7 @@ Resources:
           - ResourceType: instance
             Tags:
               - Key: GroupName
-                Value: GitRepoAssistAI_Instance
+                Value: GitMateAI_Instance
         UserData: !Base64
           Fn::Sub: |
             #! /bin/bash
@@ -237,7 +225,7 @@ Resources:
             sudo systemctl start docker
             sudo usermod -aG docker ec2-user
 
-            aws ssm get-parameters --region ${AWSRegion} --names \
+            aws ssm get-parameters --region ${AWS::Region} --names \
                 " /gitrepoassist-ai/GITHUB_APP_ID" \
                 " /gitrepoassist-ai/GITHUB_REPOSITORY" \
                 " /gitrepoassist-ai/OPENAI_API_KEY" \
@@ -250,7 +238,7 @@ Resources:
                 --with-decryption \
                 --query "Parameters[].{Name:Name,Value:Value}" > /home/ec2-user/tmp.params1.json
 
-            aws ssm get-parameters --region ${AWSRegion} --names \
+            aws ssm get-parameters --region ${AWS::Region} --names \
                 " /gitrepoassist-ai/DEBUG_LOG" \
                 " /gitrepoassist-ai/WRITE_LANGCHAIN_MSGS" \
                 " /gitrepoassist-ai/LANGCHAIN_TRACING_V2" \
@@ -268,7 +256,7 @@ Resources:
             mkdir /home/ec2-user/config
 
             #get app private key and put it in a .pem file
-            aws ssm get-parameter --region ${AWSRegion} --name \
+            aws ssm get-parameter --region ${AWS::Region} --name \
                 " /gitrepoassist-ai/GITHUB_APP_PRIVATE_KEY" \
                 --with-decryption \
                 --query "Parameter.Value" \
@@ -281,10 +269,10 @@ Resources:
             rm /home/ec2-user/tmp.params*.json /home/ec2-user/temp.env
 
             #get ecr login password and login to ecr
-            aws ecr get-login-password --region ${AWSRegion} | docker login --username AWS --password-stdin ${ECRRepositoryURL}
+            aws ecr get-login-password --region ${AWS::Region} | docker login --username AWS --password-stdin ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com
 
             #pull gitrepoassist-ai docker image
-            docker pull ${ECRRepositoryURL}/gitrepoassist-ai:latest
+            docker pull ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gitrepoassist-ai:latest
 
             docker run -d --name gitrepoassist-ai-app \
               -p 8501:8501 \
@@ -292,7 +280,7 @@ Resources:
               -v /home/ec2-user/config:/app/config \
               -v /home/ec2-user/logs:/app/logs \
               -v /home/ec2-user/history:/app/history \
-              ${ECRRepositoryURL}/gitrepoassist-ai
+              ${AWS::AccountId}.dkr.ecr.${AWS::Region}.amazonaws.com/gitrepoassist-ai
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup
