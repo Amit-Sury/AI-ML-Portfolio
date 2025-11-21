@@ -216,7 +216,7 @@ echo "Deploying CloudFormation stack..."
 aws cloudformation deploy \
 --stack-name gitrepoassist-ai \
 --region $AWS_REGION \
---template-file gitmateai_deploy.yaml \
+--template-file gitrepoassistai_deploy.yaml \
 --parameter-overrides \
 VPCCidr=$VPC_CIDR \
 Subnet1Cidr=$SUBNET1_CIDR \
