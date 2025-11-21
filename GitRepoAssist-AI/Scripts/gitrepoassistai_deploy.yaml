@@ -215,7 +215,7 @@ Resources:
           - ResourceType: instance
             Tags:
               - Key: GroupName
-                Value: GitMateAI_Instance
+                Value: GitRepAssistAI_Instance
         UserData: !Base64
           Fn::Sub: |
             #! /bin/bash
