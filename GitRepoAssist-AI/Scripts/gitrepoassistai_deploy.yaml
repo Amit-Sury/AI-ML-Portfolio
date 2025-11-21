@@ -1,12 +1,12 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: This is cloudformation script to deploy the GitMate-AI app in AWS
+Description: This is cloudformation script to deploy the GitRepoAssist-AI app in AWS
 
 ####################### Parameter Block BEGIN ###################################
 Parameters:
   PrefixName:
     Description: This is the prefix to use for all the resources
     Type: String
-    Default: GitMateAI
+    Default: GitRepoAssistAI
 
   #Network Settings
   VPCCidr:
@@ -48,18 +48,18 @@ Parameters:
   Keypair:
     Description: Instance key-pair for remote login
     Type: AWS::EC2::KeyPair::KeyName
-    Default: GitMate
+    Default: GitRepoAssist-AI-KeyPair
 
   InstanceIAMProfile:
     Description: EC2 instance profile providing access to Bedrock, SSM Parameter Store & ECR
     Type: String
-    Default: GitMateAI-EC2InstanceProfile #Provide the name of the instance profile
+    Default: GitRepoAssist-AI-EC2InstanceProfile #Provide the name of the instance profile
 
   ECRRepositoryURL:
     Type: String
-    Description: ECR Repository URL for GitMate-AI Image. Used in UserData in launch
+    Description: ECR Repository URL for GitRepoAssist-AI image. Used in UserData in launch
       template to pull docker image.
-    Default: **********.dkr.ecr.ap-south-1.amazonaws.com
+    Default: ************.dkr.ecr.ap-south-1.amazonaws.com
 
   AWSRegion:
     Type: String
@@ -238,38 +238,38 @@ Resources:
             sudo usermod -aG docker ec2-user
 
             aws ssm get-parameters --region ${AWSRegion} --names \
-                " /gitmate-ai/GITHUB_APP_ID" \
-                " /gitmate-ai/GITHUB_REPOSITORY" \
-                " /gitmate-ai/OPENAI_API_KEY" \
-                " /gitmate-ai/LLM_TYPE" \
-                " /gitmate-ai/LLM_MODEL_ID" \
-                " /gitmate-ai/BASE_URL" \
-                " /gitmate-ai/AWS_REGION" \
-                " /gitmate-ai/HISTORY_PATH" \
-                " /gitmate-ai/LOG_PATH" \
+                " /gitrepoassist-ai/GITHUB_APP_ID" \
+                " /gitrepoassist-ai/GITHUB_REPOSITORY" \
+                " /gitrepoassist-ai/OPENAI_API_KEY" \
+                " /gitrepoassist-ai/LLM_TYPE" \
+                " /gitrepoassist-ai/LLM_MODEL_ID" \
+                " /gitrepoassist-ai/BASE_URL" \
+                " /gitrepoassist-ai/AWS_REGION" \
+                " /gitrepoassist-ai/HISTORY_PATH" \
+                " /gitrepoassist-ai/LOG_PATH" \
                 --with-decryption \
                 --query "Parameters[].{Name:Name,Value:Value}" > /home/ec2-user/tmp.params1.json
 
             aws ssm get-parameters --region ${AWSRegion} --names \
-                " /gitmate-ai/DEBUG_LOG" \
-                " /gitmate-ai/WRITE_LANGCHAIN_MSGS" \
-                " /gitmate-ai/LANGCHAIN_TRACING_V2" \
-                " /gitmate-ai/LANGCHAIN_API_KEY" \
-                " /gitmate-ai/LANGCHAIN_PROJECT" \
-                " /gitmate-ai/LANGCHAIN_ENDPOINT" \
+                " /gitrepoassist-ai/DEBUG_LOG" \
+                " /gitrepoassist-ai/WRITE_LANGCHAIN_MSGS" \
+                " /gitrepoassist-ai/LANGCHAIN_TRACING_V2" \
+                " /gitrepoassist-ai/LANGCHAIN_API_KEY" \
+                " /gitrepoassist-ai/LANGCHAIN_PROJECT" \
+                " /gitrepoassist-ai/LANGCHAIN_ENDPOINT" \
                 --with-decryption \
                 --query "Parameters[].{Name:Name,Value:Value}" > /home/ec2-user/tmp.params2.json
 
             jq -s 'add' /home/ec2-user/tmp.params1.json /home/ec2-user/tmp.params2.json > /home/ec2-user/tmp.params.json
 
             # convert params.json -> .env (simple jq example)
-            jq -r '.[] | "\(.Name)=\(.Value)"' /home/ec2-user/tmp.params.json | sed 's|^ /gitmate-ai/||' > /home/ec2-user/temp.env
+            jq -r '.[] | "\(.Name)=\(.Value)"' /home/ec2-user/tmp.params.json | sed 's|^ /gitrepoassist-ai/||' > /home/ec2-user/temp.env
 
             mkdir /home/ec2-user/config
 
             #get app private key and put it in a .pem file
             aws ssm get-parameter --region ${AWSRegion} --name \
-                " /gitmate-ai/GITHUB_APP_PRIVATE_KEY" \
+                " /gitrepoassist-ai/GITHUB_APP_PRIVATE_KEY" \
                 --with-decryption \
                 --query "Parameter.Value" \
                 --output text > /home/ec2-user/config/github.private-key.pem
@@ -283,16 +283,16 @@ Resources:
             #get ecr login password and login to ecr
             aws ecr get-login-password --region ${AWSRegion} | docker login --username AWS --password-stdin ${ECRRepositoryURL}
 
-            #pull gitmate-ai docker image
-            docker pull ${ECRRepositoryURL}/gitmate-ai:latest
+            #pull gitrepoassist-ai docker image
+            docker pull ${ECRRepositoryURL}/gitrepoassist-ai:latest
 
-            docker run -d --name gitmate-app \
+            docker run -d --name gitrepoassist-ai-app \
               -p 8501:8501 \
               --env-file /home/ec2-user/.env \
               -v /home/ec2-user/config:/app/config \
               -v /home/ec2-user/logs:/app/logs \
               -v /home/ec2-user/history:/app/history \
-              ${ECRRepositoryURL}/gitmate-ai
+              ${ECRRepositoryURL}/gitrepoassist-ai
 
   InstanceSecurityGroup:
     Type: AWS::EC2::SecurityGroup

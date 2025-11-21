@@ -12,11 +12,11 @@ SUBNET1_AZ="${AWS_REGION}a" #Subnet 1 Availability Zone
 SUBNET2_AZ="${AWS_REGION}b" #Subnet 2 Availability Zone
 INSTANCE_TYPE="t3.micro" #EC2 Instance Type
 INSTANCE_AMI="ami-03695d52f0d883f65" #Amazon Linux 2 AMI, free-tier eligible
-KEY_PAIR="GitMateKeyPair" #Existing Key Pair name for EC2 instance
-EC2_IAM_PROFILE="GitMateAI-EC2InstanceProfile" #Existing IAM Instance Profile name
+KEY_PAIR="GitRepoAssist-AI-KeyPair" #Existing Key Pair name for EC2 instance
+EC2_IAM_PROFILE="GitRepoAssist-AI-EC2InstanceProfile" #Existing IAM Instance Profile name
 #AWS Parameters END
 
-#GitMate-AI Parameters
+#GitRepoAssist-AI Parameters
 GITHUB_APP_ID="********" #GitHub App ID
 GITHUB_REPOSITORY="UserName/RepoName" #GitHub Repository name
 GITHUB_APP_PRIVATEKEY_PATH="./github.private-key.pem" #Path to GitHub App Private Key file
@@ -33,11 +33,11 @@ LANGCHAIN_TRACING_V2="false" #langsmith env variables
 LANGCHAIN_API_KEY="privatekey" #langsmith env variables
 LANGCHAIN_PROJECT="my-sample-project" #langsmith env variables
 LANGCHAIN_ENDPOINT="https://api.smith.langchain.com" #langsmith env variables
-#GitMate-AI Parameters END
+#gitrepoassist-ai Parameters END
 #VARIABLES BLOCK END
 
-echo "Welcome to GitMate-AI deployment utility..."
-echo "Sript will use GitMate-AI docker image and your AWS Credentials to deploy the application on AWS..."
+echo "Welcome to GitRepoAssist-AI deployment utility..."
+echo "Sript will use GitRepoAssist-AI docker image and your AWS Credentials to deploy the application on AWS..."
 echo "Make sure you have build the image and AWS credentials are configured before proceeding..."
 echo "Do you want to continue? (y/n): "
 read CONTINUE
@@ -70,21 +70,21 @@ echo "Starting deployment..."
 
 ############### ECR creation START ########################   
 
-echo "Checking if repo gitmate-ai already exists in AWS ECR..."
+echo "Checking if repo GitRepoAssist-AI already exists in AWS ECR..."
 
-if aws ecr describe-repositories --repository-names gitmate-ai \
+if aws ecr describe-repositories --repository-names gitrepoassist-ai \
      --region "$AWS_REGION" >/dev/null 2>&1; then
   echo "ℹ️ Repo already exists. Proceeding with next steps..."
 else
   echo "⚙️ Repo doesn't exists. Creating repo..."
-  aws ecr create-repository --repository-name gitmate-ai --region $AWS_REGION 
+  aws ecr create-repository --repository-name gitrepoassist-ai --region $AWS_REGION 
 fi
 
 if [ $? -ne 0 ]; then
     echo "❌ Error: Failed to create repo in AWS ECR."
     exit 1
 else
-    echo "✅ Repo gitmate-ai created successfully."
+    echo "✅ Repo gitrepoassist-ai created successfully."
 fi  
 ############### ECR creation END ########################
 
@@ -93,16 +93,16 @@ fi
 echo "Tagging and pushing docker image to ECR repository..."
 ECR_REPO_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com"
 
-docker tag gitmate-ai:latest ${ECR_REPO_URI}/gitmate-ai:latest
+docker tag gitrepoassist-ai:latest ${ECR_REPO_URI}/gitrepoassist-ai:latest
 if [ $? -ne 0 ]; then
-    echo "❌ Error: Failed to tag docker image. Make sure the image 'gitmate-ai:latest' exists" \
+    echo "❌ Error: Failed to tag docker image. Make sure the image 'gitrepoassist-ai:latest' exists" \
      "locally and docker engine is running."
     exit 1
 else
     echo "✅ Tagging docker image is successful."
 fi  
 
-echo "Docker image tagged: ${ECR_REPO_URI}/gitmate-ai:latest"
+echo "Docker image tagged: ${ECR_REPO_URI}/gitrepoassist-ai:latest"
 echo "Logging in to AWS ECR..."
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin ${ECR_REPO_URI}
 
@@ -114,7 +114,7 @@ else
 fi
 
 echo "Pushing docker image to ECR repository..."
-docker push ${ECR_REPO_URI}/gitmate-ai:latest
+docker push ${ECR_REPO_URI}/gitrepoassist-ai:latest
 
 if [ $? -ne 0 ]; then
     echo "❌ Error: Failed to push Docker image to ECR."
@@ -128,7 +128,7 @@ fi
 ######### Creating parameters in parameter store ############
 echo "Creating .env parameters in AWS Systems Manager Parameter Store..."
 
-aws ssm put-parameter --region $AWS_REGION  --name " /gitmate-ai/GITHUB_APP_ID" --value $GITHUB_APP_ID \
+aws ssm put-parameter --region $AWS_REGION  --name " /gitrepoassist-ai/GITHUB_APP_ID" --value $GITHUB_APP_ID \
  --type "String" --description "GITHUB APP ID" > /dev/null 2>&1
 
 if [ $? -ne 0 ]; then
@@ -136,76 +136,76 @@ if [ $? -ne 0 ]; then
         "Please ensure AWS credentials have necessary permissions."
     exit 1
 else
-    echo " /gitmate-ai/GITHUB_APP_ID created."
+    echo " /gitrepoassist-ai/GITHUB_APP_ID created."
 fi
 
 VALUE=$(cat $GITHUB_APP_PRIVATEKEY_PATH)
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/GITHUB_APP_PRIVATE_KEY" --value "$VALUE" \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/GITHUB_APP_PRIVATE_KEY" --value "$VALUE" \
     --type "SecureString" --description "GITHUB APP Private key" > /dev/null 2>&1
-echo " /gitmate-ai/GITHUB_APP_PRIVATE_KEY created."
+echo " /gitrepoassist-ai/GITHUB_APP_PRIVATE_KEY created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/GITHUB_REPOSITORY" \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/GITHUB_REPOSITORY" \
     --description "GITHUB Repo name" --value $GITHUB_REPOSITORY --type "String" > /dev/null 2>&1
-echo " /gitmate-ai/GITHUB_REPOSITORY created."
+echo " /gitrepoassist-ai/GITHUB_REPOSITORY created."
 
 OPENAI_KEYVALUE=$(cat $OPENAI_API_KEY_PATH)
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/OPENAI_API_KEY" \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/OPENAI_API_KEY" \
     --description "Open API private key" \
     --value "$OPENAI_KEYVALUE" --type "SecureString" > /dev/null 2>&1
-echo " /gitmate-ai/OPENAI_API_KEY created."
+echo " /gitrepoassist-ai/OPENAI_API_KEY created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LLM_TYPE" --value $LLM_TYPE --type "String" \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LLM_TYPE" --value $LLM_TYPE --type "String" \
     --description "LLM Type # 1: Ollama, # 2: AWS Bedrock Claude Haiku, # 3: GPT" > /dev/null 2>&1
-echo " /gitmate-ai/LLM_TYPE created."
+echo " /gitrepoassist-ai/LLM_TYPE created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LLM_MODEL_ID" --value $LLM_MODEL_ID \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LLM_MODEL_ID" --value $LLM_MODEL_ID \
     --type "String" \
     --description "LLM Model ID # AWS: anthropic.claude-3-haiku-20240307-v1:0 # GPT: gpt-5-nano" > /dev/null 2>&1
-echo " /gitmate-ai/LLM_MODEL_ID created."
+echo " /gitrepoassist-ai/LLM_MODEL_ID created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/AWS_REGION" --value $AWS_BEDROCK_REGION \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/AWS_REGION" --value $AWS_BEDROCK_REGION \
     --type "String" \
     --description "AWS Region for Bedrock LLM #Example regions: us-east-1, us-west-2, eu-west-1, ap-south-1" > /dev/null 2>&1
-echo " /gitmate-ai/AWS_REGION created."
+echo " /gitrepoassist-ai/AWS_REGION created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/BASE_URL" --value $OLLAMA_BASE_URL \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/BASE_URL" --value $OLLAMA_BASE_URL \
     --type "String" \
     --description "Ollama base URL #local use: http://localhost:11434 #For docker: http://host.docker.internal:11434 http://host.docker.internal:11434" > /dev/null 2>&1
-echo " /gitmate-ai/BASE_URL created."
+echo " /gitrepoassist-ai/BASE_URL created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/HISTORY_PATH" --value $HISTORY_PATH \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/HISTORY_PATH" --value $HISTORY_PATH \
     --type "String" --description "Path to save conversation history" > /dev/null 2>&1
-echo " /gitmate-ai/HISTORY_PATH created."
+echo " /gitrepoassist-ai/HISTORY_PATH created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LOG_PATH" --value $LOG_PATH \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LOG_PATH" --value $LOG_PATH \
     --type "String" --description "Path to save logs"> /dev/null 2>&1
-echo " /gitmate-ai/LOG_PATH created."
+echo " /gitrepoassist-ai/LOG_PATH created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/DEBUG_LOG" --value $DEBUG_LOG \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/DEBUG_LOG" --value $DEBUG_LOG \
     --type "String" --description "Toggle log generation 1:enable 0:disable" > /dev/null 2>&1
-echo " /gitmate-ai/DEBUG_LOG created."
+echo " /gitrepoassist-ai/DEBUG_LOG created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/WRITE_LANGCHAIN_MSGS" --value $WRITE_LANGCHAIN_MSGS \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/WRITE_LANGCHAIN_MSGS" --value $WRITE_LANGCHAIN_MSGS \
     --type "String" --description "Toggle LLM message conversation generation 1:enable 0:disable" > /dev/null 2>&1
-echo " /gitmate-ai/WRITE_LANGCHAIN_MSGS created."
+echo " /gitrepoassist-ai/WRITE_LANGCHAIN_MSGS created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LANGCHAIN_TRACING_V2" --value $LANGCHAIN_TRACING_V2 \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LANGCHAIN_TRACING_V2" --value $LANGCHAIN_TRACING_V2 \
     --type "String" --description "langsmith env variables" > /dev/null 2>&1
-echo " /gitmate-ai/LANGCHAIN_TRACING_V2 created."
+echo " /gitrepoassist-ai/LANGCHAIN_TRACING_V2 created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LANGCHAIN_API_KEY" --value $LANGCHAIN_API_KEY \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LANGCHAIN_API_KEY" --value $LANGCHAIN_API_KEY \
     --type "String" --description "langsmith env variables"> /dev/null 2>&1
-echo " /gitmate-ai/LANGCHAIN_API_KEY created."
+echo " /gitrepoassist-ai/LANGCHAIN_API_KEY created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LANGCHAIN_PROJECT" --value $LANGCHAIN_PROJECT \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LANGCHAIN_PROJECT" --value $LANGCHAIN_PROJECT \
     --type "String" --description "langsmith env variables" > /dev/null 2>&1
-echo " /gitmate-ai/LANGCHAIN_PROJECT created."
+echo " /gitrepoassist-ai/LANGCHAIN_PROJECT created."
 
-aws ssm put-parameter --region $AWS_REGION --name " /gitmate-ai/LANGCHAIN_ENDPOINT" \
+aws ssm put-parameter --region $AWS_REGION --name " /gitrepoassist-ai/LANGCHAIN_ENDPOINT" \
     --value $LANGCHAIN_ENDPOINT --type "String" --description "langsmith env variables" > /dev/null 2>&1
-echo " /gitmate-ai/LANGCHAIN_ENDPOINT created."
+echo " /gitrepoassist-ai/LANGCHAIN_ENDPOINT created."
 
 echo "✅ Creating all the env parameters completed."
 ######## Creating parameters in parameter store END ##########
@@ -214,7 +214,7 @@ echo "Deploying CloudFormation stack..."
 
 #CloudFormation deploy command
 aws cloudformation deploy \
---stack-name gitmate-ai \
+--stack-name gitrepoassist-ai \
 --region $AWS_REGION \
 --template-file gitmateai_deploy.yaml \
 --parameter-overrides \
