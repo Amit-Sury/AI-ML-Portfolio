@@ -10,7 +10,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ### 1. 🤖 [GitRepoAssist-AI](./GitRepoAssist-AI)
   
 ### *Intelligent GitHub Assistant — powered by Agentic AI*
-- **Goal**: GitRepoAssist-AI is an **AI-powered** assistant that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent, **agentic automation**.
+- **Goal**: GitRepoAssist-AI is an **Multi-tool ReAct Agent** that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent, **agentic automation**.
 - **Tech Stack**: LangChain + LangGraph (for agentic flow orchestration), PyGithub (GitHub API integration), Python, Boto3, Streamlit, AWS-Bedrock/Ollama/OpenAI (flexible LLM backends)
 - **Highlights**:
   - 🧠 **Understands and summarizes PRs** — Get concise overviews of the latest pull requests.
