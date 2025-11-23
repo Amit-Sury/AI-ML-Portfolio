@@ -27,12 +27,13 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - 🐛 Issue Management
     - 📝 Fetch all repository issues
     - 💬 Add comments to specific issues
+    - 🧑‍💻 Get issue Creater Info   
+  - 🧠 Get detailed insights & summaries for any PR
     - 🔀 Pull Request Analysis
     - 🚦 List all open Pull Requests
-  - 🧠 Get detailed insights & summaries for any PR
     - 🗃️ Overview of files included in a PR
     - 🧑‍💻 List all PR authors
-    - 🗨️ Fetch all comments inside a PR
+    - 🗨️ Fetch all comments inside a PR 
 - **Deployment/Code Details**: [Visit GitRepoAssist-AI Page](./GitRepoAssist-AI/)
 ---
 
