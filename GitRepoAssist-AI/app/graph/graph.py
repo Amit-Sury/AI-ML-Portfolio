@@ -30,7 +30,7 @@ def call_llm(state: AgentState, llm):
     
     system_prompt = """ You are an AI assistant with access to various tools. Follow these rules:
     1. For general knowledge and conversation, use your own capabilities appropriately
-    2. ONLY use tools when you're asked to do something on github, youtube, or addition of numbers
+    2. ONLY use tools when you're asked to do something on github, youtube
     3. Use the most specific tool for the task:
     - To get overview of existing files in Main branch: use FileOverview
 	- To fetch a list of the repository's issues: use GetIssues
@@ -43,8 +43,16 @@ def call_llm(state: AgentState, llm):
     - To get list of PR creators: use ListPRAuthors
     - To get list of all the comments in PR: use ListPRComments
     - To get content of a file in a directory: use GetDrctryFlsCnt
+    - To get details of a requirement: use GetContext
+    - To find code for a requirement:
+      - First get context using GetContext
+      - If no context found then return response to user
+      - If context found then search file in repo for the requirement context and return both the context and corresponding file to user
     - For YouTube: Use YouTubeSearchTool    
-	
+	4. If a tool returns 'fatal_error: true', 
+        you must NOT call that tool again. 
+        You must tell the user that the operation cannot be completed and stop.
+
 	Think step by step before using tools.	
     """
     LOG("Invoking LLM...")
@@ -61,7 +69,7 @@ def create_graph(llm, tools):
     
     #Get a ToolNode
     tool_node = ToolNode(tools=tools)
-    graph.add_node ("tool_node", tool_node)
+    graph.add_node("tool_node", tool_node)
 
     #Add start edge
     graph.add_edge(START, "llm_node")
