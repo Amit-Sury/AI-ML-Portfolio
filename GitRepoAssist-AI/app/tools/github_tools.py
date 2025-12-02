@@ -442,10 +442,7 @@ def GetFlsfromDirectory(directorypath: str):
         directorypath (str): Path of the directory for e.g., "src" or "data/subdir"
 
     Returns:
-        dict: dictionary containing list of all the files in directory recursively:
-            - pr.number (str): Number of the PR
-            - pr_title (str): Title of the PR.
-            - pr_createdby (str): Name of the creator.            
+        nested tree containing list of all the files in directory recursively
     """
     
     try: 
@@ -632,4 +629,5 @@ def PltPRAuthors(pr_authors: list[PRAuthors]):
     #st.pyplot(fig)  # <-- Streamlit-friendly rendering
                     
     return "Operation Successful"    
+
 ######################## END  ###################################    
