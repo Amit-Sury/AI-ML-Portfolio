@@ -10,8 +10,10 @@ from langchain.tools import tool
 from github import GithubIntegration, Github
 
 import os
+import json
 from typing import TypedDict
 import matplotlib.pyplot as plt
+from pathlib import Path
 
 #my packages
 from tools.log_handler import LOG
@@ -82,22 +84,12 @@ def AddCmtOnIssue(issue_number: int, comment: str):
         if not isinstance(issue_number,int) or not isinstance(comment, str):
             return "Invalid input format. Provide issue_number as int and comment as string."
         
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authentication with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get the issue with issue_number
         issue = repo.get_issue(number=issue_number)
@@ -111,8 +103,11 @@ def AddCmtOnIssue(issue_number: int, comment: str):
     except Exception as e:
         LOG(f"Adding comment on issue#{issue_number} failed") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })            
+        
     
 ######################## END  ###################################    
 
@@ -130,22 +125,12 @@ def GetAllOpenPR():
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authentication with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get the issue with issue_number
         pull_reqs = []
@@ -159,8 +144,11 @@ def GetAllOpenPR():
     except Exception as e:
         LOG(f"Getting open PRs from repo is failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })                        
+        
 ######################## END  ###################################    
 
 # get details for a specific PR
@@ -184,22 +172,12 @@ def GetPRDetail(pr_number: int):
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-            
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get details of PR
         pr = repo.get_pull(pr_number)
@@ -222,8 +200,11 @@ def GetPRDetail(pr_number: int):
     except Exception as e:
         LOG(f"Getting details of PRs {pr_number} failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })                        
+        
 ######################## END  ###################################    
 
 # get all the comments for a specific PR
@@ -246,22 +227,12 @@ def ListPRComments(pr_number: int):
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-            
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get details of PR
         pr = repo.get_pull(pr_number)
@@ -287,8 +258,11 @@ def ListPRComments(pr_number: int):
     except Exception as e:
         LOG(f"Getting details of PRs {pr_number} failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })                        
+        
 ######################## END  ###################################    
 
 @tool
@@ -311,22 +285,12 @@ def GetPRFlsOverview(pr_number: int):
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get details of PR
         pr = repo.get_pull(pr_number)
@@ -350,8 +314,10 @@ def GetPRFlsOverview(pr_number: int):
     except Exception as e:
         LOG(f"Getting files in PR#{pr_number} failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })            
     
 ######################## END  ###################################
 
@@ -367,27 +333,16 @@ def PRFlsContent(filename: str, pr_number: int):
         pr_number (int): Pull request (PR) number
 
     Returns:
-        contents of file in string format.
-           
+        Contents of a file   
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get details of PR
         pr = repo.get_pull(pr_number)
@@ -395,14 +350,38 @@ def PRFlsContent(filename: str, pr_number: int):
         content = repo.get_contents(filename, ref=pr.head.ref)
         file_content = content.decoded_content.decode("utf-8")
         LOG(f"Getting contents of file:{filename} in PR#:{pr_number} is successful")
-        
-        return f"Operation Successful, here are the file contents: {file_content}!"
+
+        # language detection from file extension
+        ext = Path(filename).suffix.lower()
+        ext_to_lang = {
+            ".py": "python",
+            ".json": "json",
+            ".md": "markdown",
+            ".yaml": "yaml",
+            ".yml": "yaml",
+            ".txt": "text",
+        }
+        language = ext_to_lang.get(ext, "")
+
+        return {
+            "language": language,
+            "content": file_content,
+            "message": "Getting file content is successful.",
+        }
+
+        #return json.dumps({
+        #    "content": file_content,
+        #    "message": f"Getting file content is successful."
+        #    })
+        #return f"Operation Successful, here are the file contents: {file_content}!"
 
     except Exception as e:
         LOG(f"Getting file content of file:{filename} failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"    
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })            
 ######################## END  ###################################
 
 
@@ -423,22 +402,12 @@ def ListPRAuthors():
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         #Get details of PR
         pr_authors = []
@@ -457,8 +426,10 @@ def ListPRAuthors():
     except Exception as e:
         LOG(f"Getting details of PRs failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })            
 ######################## END  ###################################    
 
 # get files present in a directory
@@ -478,22 +449,12 @@ def GetFlsfromDirectory(directorypath: str):
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
 
         flsinDirectory = []
         
@@ -505,18 +466,12 @@ def GetFlsfromDirectory(directorypath: str):
     except Exception as e:
         LOG(f"Getting files in directory failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })            
     
-def lstflsRecursively(repo, directorypath, flsinDirectory):
-    
-    contents = repo.get_contents(directorypath)
-    for item in contents:
-        if item.type == "file":
-            flsinDirectory.append({"File:" : item.path})
-        elif item.type == "dir":
-            lstflsRecursively(repo, item.path, flsinDirectory)  
- 
+
 
 ######################## END  ###################################  
 
@@ -534,22 +489,12 @@ def GetDrctryFlsCnt(flspath: str):
     """
     
     try: 
-        app_id = os.environ["GITHUB_APP_ID"]
-        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
-        
-        LOG("Obtaining access token...")
-        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
-        LOG("Obtaining access token is successful")
-
-        #Authenticate with your token
-        g = Github(access_token)
-        LOG("Authenticate with your token is successful")
-
-        #Get repo
-        repo_name = os.environ["GITHUB_REPOSITORY"]
-        LOG(f"Repo name is {repo_name}")
-        repo = g.get_repo(repo_name)
-        LOG(f"Get repo {repo_name} with access token is successful")
+        repo = get_repo()
+        if not repo:
+            return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Could not access GitHub repo"
+            })
         
         LOG(f"Getting contents of file: {flspath}...")
 
@@ -557,15 +502,38 @@ def GetDrctryFlsCnt(flspath: str):
 
         # decode content
         decoded_content = file_content.decoded_content.decode("utf-8")
-       
         LOG(f"Getting files in a directory is successful: {decoded_content[:40]}")
-        return f"Operation Successful, here are the list of files in given directory: {decoded_content}"
+
+        # language detection from file extension
+        ext = Path(flspath).suffix.lower()
+        ext_to_lang = {
+            ".py": "python",
+            ".json": "json",
+            ".md": "markdown",
+            ".yaml": "yaml",
+            ".yml": "yaml",
+            ".txt": "text",
+        }
+        language = ext_to_lang.get(ext, "")
+
+        return {
+            "language": language,
+            "content": decoded_content,
+            "message": "Getting file content is successful.",
+        }
+        #return json.dumps({
+        #    "content": decoded_content,
+        #    "message": f"Getting file content is successful."
+        #    })
+        #return f"Operation Successful, here are the list of files in given directory: {decoded_content}"
 
     except Exception as e:
         LOG(f"Getting contents of files in directory failed.") 
         LOG(f"Received exception: {e}")   
-                    
-        return f"Operation Failed. Received exception {e} from github"
+        return json.dumps({
+            "fatal_error": True,
+            "message": f"Operation Failed. Received exception {e} from github"
+            })            
     
 def lstflsRecursively(repo, directorypath, flsinDirectory):
     
@@ -578,6 +546,35 @@ def lstflsRecursively(repo, directorypath, flsinDirectory):
  
 
 ######################## END  ###################################  
+
+###################### GetRepo BEGIN ############################
+def get_repo():
+    """This function returns the git repo object"""
+    
+    try:
+        app_id = os.environ["GITHUB_APP_ID"]
+        privatekey = os.environ["GITHUB_APP_PRIVATE_KEY"]
+        
+        LOG("Obtaining access token...")
+        access_token = GitTokenHandler(app_id=app_id, private_key=privatekey).get_token()
+        LOG("Obtaining access token is successful")
+
+        #Authenticate with your token
+        g = Github(access_token)
+        LOG("Authentication with your token is successful")
+
+        #Get repo
+        repo_name = os.environ["GITHUB_REPOSITORY"]
+        LOG(f"Repo name is {repo_name}")
+        repo = g.get_repo(repo_name)
+        LOG(f"Get repo {repo_name} with access token is successful")
+        return repo
+    except Exception as e:
+        LOG(f"Getting github repo failed: {e}")
+        return None
+
+    
+############################# END ###############################
 
 ######This currently is not getting used in this app############
 
