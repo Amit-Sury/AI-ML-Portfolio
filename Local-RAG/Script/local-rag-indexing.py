@@ -59,17 +59,18 @@ def chunk_text(text, chunk_size=500, overlap=50):
 # Function to generate embeddings and add to Chroma
 def add_docs_to_chroma(docs, doc_ids, filenames, collection, embedding_model):
 
-    chunk_size=500
-    overlap=50
+    chunk_size=100
+    overlap=40
     for doc, doc_id, filename in zip(docs, doc_ids, filenames):
         # Chunk the document if it's too large
         chunks = chunk_text(doc, chunk_size, overlap)
         for i, chunk in enumerate(chunks):
             emb = ollama.embed(model=embedding_model, input=chunk)["embeddings"][0]
+            chunk_id = f"{doc_id}_chunk_{i}"
             collection.add(
-                documents=[doc],
+                documents=[chunk],
                 embeddings=[emb],
-                ids=[doc_id],
+                ids=[chunk_id],
                 metadatas=[{"source": filename}]  # for citations
             )
         print(f"Added document ID {doc_id} from file \"{filename}\".")
@@ -91,7 +92,7 @@ crdb_client = chromadb.PersistentClient(path)
 
 # Create or get collection. Collections are where your embeddings, documents, and metadata will be stored
 #  'get_or_create_collection` avoids creating a new collection every time
-collection = crdb_client.get_or_create_collection("kb_collection")
+collection = crdb_client.get_or_create_collection("kb_collection", metadata={"hnsw:space": "cosine"})
 
 # Embedding model
 embedding_model = 'hf.co/CompendiumLabs/bge-base-en-v1.5-gguf'
@@ -103,4 +104,5 @@ add_docs_to_chroma(docs, doc_ids, filenames, collection, embedding_model)
 # Persist the Chroma DB to disk
 print(f"Persistent Chroma DB ready. All documents are added to ChromaDB at location: {path}")
 print("Process Successfully completed!")
+
 
