@@ -21,7 +21,7 @@ def retrieve_answer(query, embedding_model, llm_model, collection, conversation_
         include=['documents', 'distances', 'metadatas']
     )
 
-    similarity_threshold=0.7 # Max distance to consider a chunk's relevance
+    #similarity_threshold=0.7 # Max distance to consider a chunk's relevance
     
     # Extract documents, distances and metadata from the results
     documents = results.get('documents')
@@ -36,9 +36,9 @@ def retrieve_answer(query, embedding_model, llm_model, collection, conversation_
         for doc, dist, meta in zip(documents[0], distances[0], metadatas[0]):
             #Build the context by selecting only those documents that are similar enough to the user's query.
             #This avoids passing irrelevant chunks to LLM.
-            if dist <= similarity_threshold:
-                context.append(doc)
-                source_docs.append(meta.get('source', 'N/A'))
+            #if dist <= similarity_threshold:
+            context.append(doc)
+            source_docs.append(meta.get('source', 'N/A'))
     
     # Join sources into a single string (if any found)
     if source_docs:
@@ -130,6 +130,7 @@ if prompt := st.chat_input("Type your question..."):
     st.session_state["messages"].append(("assistant", answer))
 
 ######################### Streamlit UI Code END #########################
+
 
 
 
