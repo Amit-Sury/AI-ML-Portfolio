@@ -48,8 +48,26 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 - **Deployment/Code Details**: [Visit AWS-RAG Page](./AWS-RAG/)
 
 ---
+### 3. [Fine-Tuning LLM on AWS SageMaker](./Fine-Tune-LLM)
+- **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **AWS SageMaker** to gain hands-on experience, with a focus on domain specialization.  
+- **Tech Stack**:
+  - **Model**: meta/llama2-7b-hf (base/text generation), source: [Huggingface](https://huggingface.co/meta-llama/Llama-2-7b-hf)
+  - **Training Framework**: HuggingFace TRL (SFTTrainer), PEFT/LoRA, transformers, Pytorch, AWS SageMaker (infrastructure)
+  - **Datasets**: netop/TeleQnA: a telecom QA benchmark dataset, source: [Huggingface](https://huggingface.co/datasets/netop/TeleQnA)
+- **Highlights**:
+  - Leveraged **AWS Sagemaker** for End-to-end fine-tuning workflow.
+  - Fine-tuned **LLaMA-2 model** using instruction-style SFT. Used **LoRA (Low-Rank Adaptation)** technique to reduce GPU memory footprint and training cost.
+  - Focused on telecom domain lingo and response structure. Dataset's (TeleQnA) original intent is to evaluate telecom knowledge in LLMs, in this project it is used to adapt the model to telecom domain language, terminology, and reasoning style.
+  - The dataset was reshaped into an instruction-tuning format:
+```
+    ###Instruction: System prompt
+    ###Input: Telecom-related questions
+    ###Output: Answer
+```
+  - **Deployment/Code Details**: [Visit Fine-Tune-LLM Page](./Fine-Tune-LLM/)
+---
 
-### 3. [CNN](./CNN)
+### 4. [CNN](./CNN)
 - **Goal**: A **Convolutional Neural Network (CNN)** that classifies images of animals.  
 - **Tech Stack**: Python, TensorFlow, Keras, Pandas, Matplotlib  
 - **Highlights**:
@@ -61,7 +79,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ---
 
-### 4. [Local-RAG](./Local-RAG)
+### 5. [Local-RAG](./Local-RAG)
 - **Goal**: Build and interact with a **Local Retrieval-Augmented Generation (RAG) chatbot** using ChromaDB and Ollama. The chatbot allows you to query documents intelligently using embeddings.
 - **Tech Stack**: Python, Chroma DB, Ollama, Hugging face, Streamlit 
 - **Highlights**:
@@ -79,7 +97,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ## 🛠️ Tools & Technologies
 - **Programming**: Python (NumPy, Pandas, Matplotlib), PyGithub
-- **ML/DL**: TensorFlow, Langgraph + Langchain (for agentic flow orchestration), Keras, OpenAI, Ollama, Hugging Face, Chroma DB (for vector store)  
+- **ML/DL**: TensorFlow, Langgraph + Langchain (for agentic flow orchestration), Keras, TRL, OpenAI, Ollama, Hugging Face, Chroma DB (for vector store)  
 - **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)
 
 
