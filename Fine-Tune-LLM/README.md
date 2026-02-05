@@ -1,4 +1,4 @@
-# Fine-Tuning LLaMA-2 (7B) on Amazon SageMaker
+# Fine-Tune LLaMA-2 (7B) on Amazon SageMaker
 
 ## Overview
 This project demonstrates **Supervised Fine-Tuning (SFT)** of a **base LLM** (`meta/llama2-7b-hf`) using **parameter-efficient techniques (LoRA)** on **Amazon SageMaker AI**. 
