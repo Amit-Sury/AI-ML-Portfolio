@@ -48,14 +48,14 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 - **Deployment/Code Details**: [Visit AWS-RAG Page](./AWS-RAG/)
 
 ---
-### 3. [Fine-Tuning LLM on AWS SageMaker](./Fine-Tune-LLM)
-- **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **AWS SageMaker** to gain hands-on experience, with a focus on domain specialization.  
+### 3. [Fine-Tuning LLM on Amazon SageMaker](./Fine-Tune-LLM)
+- **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **Amazon SageMaker** to gain hands-on experience, with a focus on domain specialization.  
 - **Tech Stack**:
   - **Model**: meta/llama2-7b-hf (base/text generation), source: [Huggingface](https://huggingface.co/meta-llama/Llama-2-7b-hf)
   - **Training Framework**: HuggingFace TRL (SFTTrainer), PEFT/LoRA, transformers, Pytorch, AWS SageMaker (infrastructure)
   - **Datasets**: ```netop/TeleQnA```: a telecom QA benchmark dataset, source: [Huggingface](https://huggingface.co/datasets/netop/TeleQnA)
 - **Highlights**:
-  - Leveraged **AWS Sagemaker** for End-to-end fine-tuning workflow.
+  - Leveraged **Amazon Sagemaker** for End-to-end fine-tuning workflow.
   - Fine-tuned **LLaMA-2 model** using instruction-style SFT. Used **LoRA (Low-Rank Adaptation)** technique to reduce GPU memory footprint and training cost.
   - Focused on telecom domain lingo and response structure. Dataset's (TeleQnA) original intent is to evaluate telecom knowledge in LLMs, in this project it is used to adapt the model to telecom domain language, terminology, and reasoning style.
   - The dataset was reshaped into an instruction-tuning format:
