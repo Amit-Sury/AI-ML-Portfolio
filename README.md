@@ -49,7 +49,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ---
 ### 3. [Fine-Tuning LLM on Amazon SageMaker](./Fine-Tune-LLM)
-- **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **Amazon SageMaker** to gain hands-on experience, with a focus on domain specialization.  
+- **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **Amazon SageMaker** with a focus on domain specialization.  
 - **Tech Stack**:
   - **Model**: meta/llama2-7b-hf (base/text generation), source: [Huggingface](https://huggingface.co/meta-llama/Llama-2-7b-hf)
   - **Training Framework**: HuggingFace TRL (SFTTrainer), PEFT/LoRA, transformers, Pytorch, AWS SageMaker (infrastructure)
