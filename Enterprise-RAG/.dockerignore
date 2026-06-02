@@ -1,0 +1,16 @@
+# Python cache
+__pycache__/
+*.py[cod]
+
+# Config / Secrets
+.env
+
+#python scripts
+ingestion_service.py
+ingestion_service_lambda.py
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
