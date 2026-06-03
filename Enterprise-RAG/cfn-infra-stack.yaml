@@ -1,0 +1,244 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates infrastructure resources (IAM roles, cognito, APIGateway, VPC Link) for enterprise-rag
+
+####################### Parameter Block BEGIN ########################
+Parameters:
+  PrefixName:
+    Description: This is the prefix to use for all the resources
+    Type: String
+    Default: enterprise-rag
+
+  #Network Settings
+  VPCId:
+    Description: The VPC ID created by eksctl where EKS is running.
+    Type: AWS::EC2::VPC::Id
+
+  PrivateSubnetIds:
+    Description: Private subnet IDs where the internal NLB will live.    
+    Type: List<AWS::EC2::Subnet::Id>
+    
+######################## END  ###################################
+
+################ Resource Block BEGIN ###########################
+Resources:
+  # -------------------
+  # IAM role for retrieval service
+  # -------------------
+  RetrievalServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${PrefixName}-retrieval-service-role
+      Description: IAM Role for retrieval service pods to access Bedrock and OpenSearch Serverless.
+      # Allows EKS Pod Identity or OIDC provider to assume this role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pods.eks.amazonaws.com
+            Action: 
+              - sts:AssumeRole
+              - sts:TagSession
+      Policies:
+        - PolicyName: !Sub ${PrefixName}-retrieval-service-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Bedrock Permissions
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: 
+                  - 'arn:aws:bedrock:*::foundation-model/*'
+              # OpenSearch Serverless Vector DB Permissions
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource: "*"
+                  #- !Sub 'arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${PrefixName}-collection'
+              
+  # -------------------
+  # IAM role for External Secrets Operator
+  # -------------------
+  ESOServiceRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${PrefixName}-eso-role
+      Description: IAM Role for External Secrets Operator to access Parameter Store and Secrets Manager
+
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pods.eks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+              - sts:TagSession
+
+      Policies:
+        - PolicyName: !Sub ${PrefixName}-eso-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+
+              # Parameter Store Access
+              - Effect: Allow
+                Action:
+                  - ssm:GetParameter
+                  - ssm:GetParameters
+                  - ssm:GetParametersByPath
+                Resource: "*"
+
+              #commenting below are currently there are no secrets to be stored in secret manager
+              # Secrets Manager Access
+              #- Effect: Allow
+              #  Action:
+              #    - secretsmanager:GetSecretValue
+              #  Resource: "*"
+
+  # -------------------
+  # VPC Link security group
+  # -------------------
+  VpcLinkSecurityGroup:  
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Security group for API Gateway VPC Link
+      VpcId: !Ref VPCId
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+
+  # -------------------
+  # VPC Link
+  # -------------------
+  ApiGwVpcLink:
+    Type: AWS::ApiGatewayV2::VpcLink
+    Properties:
+      Name: !Sub ${PrefixName}-eks-vpc-link
+      SubnetIds: !Ref PrivateSubnetIds
+      SecurityGroupIds:
+        - !Ref VpcLinkSecurityGroup
+
+  # -------------------
+  # API Gateway for HTTP APIs
+  # -------------------
+  APIGatewayHttpApi:
+    Type: AWS::ApiGatewayV2::Api
+    Properties:
+      Name: !Sub ${PrefixName}-http-apigateway
+      ProtocolType: HTTP
+      Description: HTTP API Gateway routing traffic to EKS FastAPI via VPC Link.
+
+  # -------------------
+  # Cognito user pool
+  # ------------------- 
+  UserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub ${PrefixName}-userpool
+      UsernameConfiguration:
+        CaseSensitive: false
+      AutoVerifiedAttributes:
+        - email
+  
+  # -------------------
+  # Cognito domain prefix for the Hosted UI
+  # -------------------   
+  UserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Ref PrefixName
+      UserPoolId: !Ref UserPool
+
+  # -------------------
+  # Cognito app client
+  # -------------------  
+  UserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn:
+      - APIGatewayHttpApi
+    Properties:
+      ClientName: !Sub ${PrefixName}-login-client
+      UserPoolId: !Ref UserPool
+      GenerateSecret: true # Generates CLIENT_SECRET for server-to-server calls
+      ExplicitAuthFlows:
+        - ALLOW_USER_PASSWORD_AUTH
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthFlows:
+        - code # Supports authorization code grant flow
+      AllowedOAuthScopes:
+        - openid
+        - email
+        - profile
+      CallbackURLs:
+          # Redirects straight to API gateway which send to fastapi root endpoint
+        - !GetAtt APIGatewayHttpApi.ApiEndpoint 
+      LogoutURLs:
+        - !Sub
+          - '${ApiEndpoint}/logged-out'
+          - ApiEndpoint: !GetAtt APIGatewayHttpApi.ApiEndpoint
+      SupportedIdentityProviders:
+        - COGNITO
+
+  # -------------------
+  # API Gateway JWT Authorizer to read tokens from the Cookie header
+  # -------------------   
+  ApiJwtAuthorizer:
+    Type: AWS::ApiGatewayV2::Authorizer
+    Properties:
+      Name: CognitoCookieAuthorizer
+      ApiId: !Ref APIGatewayHttpApi
+      AuthorizerType: JWT
+      IdentitySources:
+        - '$request.header.Cookie' # Custom configuration to intercept secure cookies
+      JwtConfiguration:
+        Audience:
+          - !Ref UserPoolClient
+        Issuer: !Sub 'https://cognito-idp.${AWS::Region}://{UserPool}'  
+
+
+##################### Resource Block END #####################
+
+##################### Output Block BEGIN #####################
+Outputs:
+  oRetrievalServiceRole:
+    Description: Give this ARN to your EKS admin to bind to the Kubernetes service account.
+    Value: !GetAtt RetrievalServiceRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-RetrievalServiceRoleArn"
+
+  oESOServiceRole:
+    Description: Give this ARN to your EKS admin to bind to the Kubernetes service account.
+    Value: !GetAtt ESOServiceRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-ESOServiceRoleArn"  
+
+  oVpcLinkId:
+    Description: Use this ID when creating the API Gateway route integration later.
+    Value: !Ref ApiGwVpcLink
+    Export:
+      Name: !Sub "${AWS::StackName}-VpcLinkId"
+
+  oAPIGatewayId:
+    Description: Use this ID when creating the API Gateway route integration later.
+    Value: !Ref APIGatewayHttpApi
+    Export:
+      Name: !Sub "${AWS::StackName}-APIGatewayId"
+
+  oHttpApiGatewayUrl:
+    Description: The public endpoint URL for users to access the RAG system.
+    Value: !GetAtt APIGatewayHttpApi.ApiEndpoint   
+    Export:
+      Name: !Sub "${AWS::StackName}-APIGatewayUrl"
+
+  oCognitoUserpoolClientID:
+    Description: The public endpoint URL for users to access the RAG system.
+    Value: !Ref UserPoolClient
+    Export:
+      Name: !Sub "${AWS::StackName}-CognitoUserpoolClientID"
+
+##################### Output Block END #####################
