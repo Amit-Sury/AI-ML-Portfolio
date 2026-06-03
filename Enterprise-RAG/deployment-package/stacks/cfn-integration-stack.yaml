@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates NLB ApiGw Integration, APIGateway route and stage for enterprise-rag
+
+####################### Parameter Block BEGIN #####################
+Parameters:
+  PrefixName:
+    Description: This is the prefix to use for all the resources
+    Type: String
+    Default: enterprise-rag
+
+  #API Gateway ID
+  APIGatewayHttpApi:
+    Description: API Gateway ID created by cfn-infra-stack.
+    Type: String
+
+  VpcLink:
+    Description: VPC link created by cfn-infra-stack.    
+    Type: String
+  
+  K8sNLBDnsName:
+    Description: K8s nlb dns created by kubenetes service loadbalancer type
+    Type: String
+    
+######################## END  ###################################
+
+################ Resource Block BEGIN ###########################
+Resources:
+  # -------------------
+  # NLB-APIGw integration, APIGw will forward the incoming request 
+  # to NLB endpoint using URI specified in IntegrationUri
+  # Kubernetes/AWS Load Balancer Controller
+  # will create and manage the NLB automatically
+  # using this flow: HTTP Request -> API Gw-> VPC Link -> NLB integration -> pods
+  # -------------------
+  NLBApiGwIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      Description: !Sub ${PrefixName}-NLB-APIGw-integration
+      ApiId: !Ref APIGatewayHttpApi
+      IntegrationType: HTTP_PROXY
+      IntegrationMethod: ANY
+      ConnectionType: VPC_LINK
+      ConnectionId: !Ref VpcLink
+      PayloadFormatVersion: "1.0"
+      #currently using placeholder, this will be updated later once service is created.
+      IntegrationUri: !Sub "http://${K8sNLBDnsName}"
+	  
+
+  # =========================================================================
+  # API gateway PUBLIC ROUTES (No Authorizer Enabled)
+  # API Gateway forwards to NLB integration specified by NLBApiGwIntegration
+  # =========================================================================:   
+  
+  # -------------------
+  # Root endpoint (GET /) 
+  # -------------------
+  RootRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGatewayHttpApi
+      RouteKey: 'GET /'
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref NLBApiGwIntegration
+
+  # -------------------
+  # Refresh token endpoint (POST /refresh) 
+  # -------------------
+  RefreshRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGatewayHttpApi
+      RouteKey: 'POST /refresh'
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref NLBApiGwIntegration
+  
+  # -------------------
+  # logged-out endpoint (POST /refresh) 
+  # -------------------
+  LoggedOutRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGatewayHttpApi
+      RouteKey: 'GET /logged-out'
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref NLBApiGwIntegration
+
+  # =========================================================================
+  # API gateway PRIVATE ROUTES (Authorizer Enabled)
+  # =========================================================================:  
+
+  # -------------------
+  # Using default which matches with rest all endpoints 
+  # -------------------
+  DefaultRoute:
+    Type: AWS::ApiGatewayV2::Route
+    Properties:
+      ApiId: !Ref APIGatewayHttpApi
+      RouteKey: "$default"
+      AuthorizationType: JWT
+      AuthorizerId: !Ref ApiJwtAuthorizer
+      Target: !Join
+        - /
+        - - integrations
+          - !Ref NLBApiGwIntegration
+
+
+  # -------------------
+  # API Stage
+  # -------------------
+  APIStage:
+    Type: AWS::ApiGatewayV2::Stage
+    Properties:
+      ApiId: !Ref APIGatewayHttpApi
+      StageName: production
+      AutoDeploy: true	  
+   
+##################### Resource Block END #####################
+

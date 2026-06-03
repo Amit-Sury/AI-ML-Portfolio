@@ -1,0 +1,31 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates lambda-artifacts s3 bucket for enterprise rag
+
+##################### Parameter Block BEGIN #####################
+Parameters:
+  PrefixName:
+    Description: This is used in all the resources
+    Type: String
+    Default: enterprise-rag
+##################### Parameter Block END #####################
+
+##################### Resources Block BEGIN #####################
+Resources:
+  
+  LambdaArtifactBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub ${PrefixName}-lambda-artifacts
+##################### Resources Block END #####################
+
+##################### Output Block BEGIN #####################
+Outputs:
+
+  oLambdaArtifactBucketName:
+    Value: !Ref LambdaArtifactBucket
+    Export:
+      Name: !Sub "${AWS::StackName}-LambdaArtifactBucketName"
+
+  oLambdaArtifactBucketURL:
+    Value: !GetAtt LambdaArtifactBucket.RegionalDomainName   
+##################### Output Block END #####################  

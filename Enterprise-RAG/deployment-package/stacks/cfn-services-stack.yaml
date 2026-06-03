@@ -1,0 +1,238 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Creates OS Serverless Collection and lambda for enterprise rag
+
+##################### Parameter Block BEGIN #####################
+Parameters:
+  PrefixName:
+    Description: This is used in all the resources
+    Type: String
+    Default: enterprise-rag
+
+  IndexName:
+    Description: Index name of the OpenSearch collection
+    Type: String
+    Default: enterprise-rag-index
+  
+  EmbeddingModel:
+    Description: Embedding model id, lambda will call this to generate embedding
+    Type: String
+    Default: amazon.titan-embed-text-v2:0
+##################### Parameter Block END #####################
+
+##################### Resources Block BEGIN #####################
+Resources:
+  #OS collection encryption policy
+  OpenSearchEncryptionPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: !Sub ${PrefixName}-encryption-policy
+      Type: encryption
+      Policy: !Sub |
+        {
+          "Rules": [
+            {
+              "ResourceType": "collection",
+              "Resource": [
+                "collection/${PrefixName}-collection"
+              ]
+            }
+          ],
+          "AWSOwnedKey": true
+        }
+  
+  #OS collection network policy
+  OpenSearchNetworkPolicy:
+    Type: AWS::OpenSearchServerless::SecurityPolicy
+    Properties:
+      Name: !Sub ${PrefixName}-network-policy
+      Type: network
+      Policy: !Sub |
+        [
+          {
+            "Rules": [
+              {
+                "ResourceType": "collection",
+                "Resource": [
+                  "collection/${PrefixName}-collection"
+                ]
+              },
+              {
+                "ResourceType": "dashboard",
+                "Resource": [
+                  "collection/${PrefixName}-collection"
+                ]
+              }
+            ],
+            "AllowFromPublic": true
+          }
+        ]
+
+  #OS collection data access policy
+  OpenSearchAccessPolicy:
+    Type: AWS::OpenSearchServerless::AccessPolicy
+    Properties:
+      Name: !Sub ${PrefixName}-access-policy
+      Type: data
+      Policy: !Sub |
+        [
+          {
+            "Description": "${PrefixName}-access-policy",
+            "Rules": [
+              {
+                "ResourceType": "collection",
+                "Resource": [
+                  "collection/${PrefixName}-collection"
+                ],
+                "Permission": [
+                  "aoss:DescribeCollectionItems"
+                ]
+              }, 
+              {
+                "ResourceType": "index",
+                "Resource": [
+                  "index/${PrefixName}-collection/*"
+                ],
+                "Permission": [
+                  "aoss:CreateIndex",
+                  "aoss:DeleteIndex",
+                  "aoss:UpdateIndex",	
+                  "aoss:DescribeIndex",
+                  "aoss:ReadDocument",
+                  "aoss:WriteDocument"
+                ]
+              }      
+            ],
+            "Principal": [
+              "arn:aws:iam::${AWS::AccountId}:role/${PrefixName}-retrieval-service-role",
+              "arn:aws:iam::${AWS::AccountId}:role/${PrefixName}-lambda-execution-role",              
+              "arn:aws:iam::${AWS::AccountId}:user/Admin"
+            ]
+          }
+        ]
+
+  #OS serverless collection
+  OpenSearchCollection:
+    Type: AWS::OpenSearchServerless::Collection
+    DependsOn:
+      - OpenSearchEncryptionPolicy #OS Serverless enforces encryption policy must exist before collection creation
+    Properties:
+      Name: !Sub ${PrefixName}-collection
+      Type: VECTORSEARCH
+      StandbyReplicas: DISABLED
+      Description: Vector search collection for enterprise-rag
+
+  # -------------------
+  # IAM role for lambda
+  # -------------------
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${PrefixName}-lambda-execution-role
+      Description: IAM Role for lambda function for data ingestion
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 
+              - sts:AssumeRole              
+      Policies:
+        - PolicyName: !Sub ${PrefixName}-lambda-execution-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              # Bedrock Permissions
+              - Effect: Allow
+                Action:
+                  - bedrock:InvokeModel
+                  - bedrock:InvokeModelWithResponseStream
+                Resource: 
+                  - 'arn:aws:bedrock:*::foundation-model/*'
+              # OpenSearch Serverless Vector DB Permissions
+              - Effect: Allow
+                Action:
+                  - aoss:APIAccessAll
+                Resource: "*"
+                  #- !Sub 'arn:aws:aoss:${AWS::Region}:${AWS::AccountId}:collection/${PrefixName}-collection'
+              # S3ReadOnly Permissions
+              - Effect: Allow
+                Action:
+                  - s3:Get*
+                  - s3:List*
+                Resource: 
+                  - !Sub arn:aws:s3:::${PrefixName}-knowledge-docs
+                  - !Sub arn:aws:s3:::${PrefixName}-knowledge-docs/*
+                  - !Sub arn:aws:s3:::${PrefixName}-lambda-artifacts
+                  - !Sub arn:aws:s3:::${PrefixName}-lambda-artifacts/*
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-function.html
+  #Ingestion lambda definition
+  IngestionLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${PrefixName}-ingestion-lambda
+      Runtime: python3.13
+      Handler: ingestion_service_lambda.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      MemorySize: 3000
+      Timeout: 60
+      Code:
+        S3Bucket: !ImportValue cfn-s3-stack-LambdaArtifactBucketName
+        S3Key: lambda.zip
+      Layers:
+        - !Ref LambdaLayer
+      Environment:
+        Variables:
+          VECTOR_DB_HOSTNAME: !GetAtt OpenSearchCollection.CollectionEndpoint
+          INDEX_NAME: !Ref IndexName
+          EMBEDDING_MODEL_ID: !Ref EmbeddingModel
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-layerversion.html
+  #lambda layer
+  LambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub ${PrefixName}-lambda-layer
+      Content:
+        S3Bucket: !ImportValue cfn-s3-stack-LambdaArtifactBucketName
+        S3Key: lambda-layer.zip
+      CompatibleRuntimes:
+        - python3.13
+
+  #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-permission.html  
+  #Ingestion lambda Invoke permission
+  LambdaInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref IngestionLambda
+      Action: lambda:InvokeFunction
+      Principal: s3.amazonaws.com
+      SourceArn: !Sub arn:aws:s3:::${PrefixName}-knowledge-docs
+
+  #knowledge documents bucket
+  DocumentsBucket:
+    Type: AWS::S3::Bucket
+    DependsOn:
+      - LambdaInvokePermission
+      - IngestionLambda
+    Properties:
+      BucketName: !Sub ${PrefixName}-knowledge-docs
+      NotificationConfiguration:
+        LambdaConfigurations:
+          - Event: s3:ObjectCreated:*
+            Function: !GetAtt IngestionLambda.Arn
+##################### Resources Block END #####################
+
+##################### Output Block BEGIN #####################
+Outputs:
+  oOpenSearchCollection:
+    Description: Give this ARN to your EKS admin to bind to the Kubernetes service account.
+    Value: !GetAtt OpenSearchCollection.CollectionEndpoint
+    Export:
+      Name: !Sub "${AWS::StackName}-OpenSearchCollection"
+
+
+

@@ -190,7 +190,7 @@ Resources:
   ApiJwtAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
     Properties:
-      Name: CognitoCookieAuthorizer
+      Name: !Sub ${PrefixName}-CognitoCookieAuthorizer
       ApiId: !Ref APIGatewayHttpApi
       AuthorizerType: JWT
       IdentitySources:
