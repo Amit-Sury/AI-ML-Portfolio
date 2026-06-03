@@ -9,5 +9,4 @@
 ├── /eso-manifests/                   
     ├── eso-ClusterSecretStores.yaml     # ESO ClusterSecretStore for aws-parameterstore
     ├── eso-ExternalSecret.yaml          # ESO ExternalSecret for aws parameterstore
-
 ```
