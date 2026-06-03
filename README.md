@@ -6,8 +6,33 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ---
 
 ## 📂 Projects
-
-### 1. 🤖 [GitRepoAssist-AI](./GitRepoAssist-AI)
+### 1. [Enterprise-RAG](./Enterprise-RAG)
+- **Goal**: Enterprise-grade RAG platform demonstrating modern AI Engineering practices across **DataOps, LLMOps, GitOps, Security, and Observability** on AWS. 
+- **Key Features**:
+  -  **DataOps**: Automated document ingestion and indexing pipeline:
+    ```text
+    Documents → S3 → Lambda → Bedrock Embeddings → OpenSearch
+    ```
+  -  **LLMOps**: Kubernetes-native retrieval and generation workflow
+    ```text  
+      User → API Gateway  → Cognito → FastAPI → Input Guardrails  → Knowlege retrieval → Context Builder →
+    LLM → Output Guardrails (LLM-as-a-Judge) → Response
+    ```
+  -  **GitOps & CI/CD**: Argo CD, Git-based deployments, Declarative Kubernetes manifests.
+  -  **Security**:  IAM least-privilege access, AWS Secrets Manager / SSM Parameter Store, External Secrets Operator (ESO)
+  -  **Observability**: Amazon CloudWatch Logs, application monitoring
+- **Tech Stack**:
+  - AI/LLM: Amazon Bedrock, LangChain, LangGraph
+  - Backend: FastAPI
+  - Platform: Amazon EKS, Kubernetes
+  - Data Layer: Amazon S3, OpenSearch
+  - Ingestion: AWS Lambda
+  - Security: Cognito, Secrets Manager, ESO, IAM
+  - DevOps: Argo CD, GitOps
+  - Monitoring: CloudWatch  
+- **Deployment/Code Details**: [Visit Enterprise-RAG Page](./Enterprise-RAG)
+---    
+### 2. 🤖 [GitRepoAssist-AI](./GitRepoAssist-AI)
   
 ### *Intelligent GitHub Assistant — powered by Agentic AI*
 - **Goal**: GitRepoAssist-AI is an **Multi-tool ReAct Agent** that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent **agentic automation**.
@@ -35,18 +60,6 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     - 🧑‍💻 List all PR authors
     - 🗨️ Fetch all comments inside a PR 
 - **Deployment/Code Details**: [Visit GitRepoAssist-AI Page](./GitRepoAssist-AI/)
----
-
-### 2. [AWS-RAG](./AWS-RAG)
-- **Goal**: A knowledge assistant chatbot using **Large Language Models (LLMs)** and **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware responses.
-- **Tech Stack**: AWS (Bedrock, S3, OpenSearch), Python, Boto3, Streamlit 
-- **Highlights**:
-  - Leveraged **AWS Bedrock** with Titan Embeddings for vector generation and **Anthropic Claude** as the LLM.  
-  - Designed a **knowledge base pipeline** leveraging S3 and OpenSearch for scalable document storage and retrieval.
-  - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capability**.
-  - Built an **interactive UI with Streamlit** for seamless user interaction.
-- **Deployment/Code Details**: [Visit AWS-RAG Page](./AWS-RAG/)
-
 ---
 ### 3. [Fine-Tuning LLM on Amazon SageMaker](./Fine-Tune-LLM)
 - **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **Amazon SageMaker** with a focus on domain specialization.  
@@ -79,7 +92,18 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 
 ---
 
-### 5. [Local-RAG](./Local-RAG)
+### 5. [AWS-Managed RAG](./AWS-RAG)
+- **Goal**: A knowledge assistant chatbot using **Large Language Models (LLMs)** and **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware responses.
+- **Tech Stack**: AWS (Bedrock, S3, OpenSearch), Python, Boto3, Streamlit 
+- **Highlights**:
+  - Leveraged **AWS Bedrock** with Titan Embeddings for vector generation and **Anthropic Claude** as the LLM.  
+  - Designed a **knowledge base pipeline** leveraging S3 and OpenSearch for scalable document storage and retrieval.
+  - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capability**.
+  - Built an **interactive UI with Streamlit** for seamless user interaction.
+- **Deployment/Code Details**: [Visit AWS-RAG Page](./AWS-RAG/)
+---
+
+### 6. [Local-RAG](./Local-RAG)
 - **Goal**: Build and interact with a **Local Retrieval-Augmented Generation (RAG) chatbot** using ChromaDB and Ollama. The chatbot allows you to query documents intelligently using embeddings.
 - **Tech Stack**: Python, Chroma DB, Ollama, Hugging face, Streamlit 
 - **Highlights**:
@@ -96,8 +120,8 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ---
 
 ## 🛠️ Tools & Technologies
-- **Programming**: Python (NumPy, Pandas, Matplotlib), PyGithub
-- **ML/DL**: TensorFlow, Langgraph + Langchain (for agentic flow orchestration), Keras, TRL, OpenAI, Ollama, Hugging Face, Chroma DB (for vector store)  
+- **Programming**: Python (NumPy, Pandas, Matplotlib), PyGithub, FastAPI
+- **ML/DL**: TensorFlow, Langgraph + Langchain (for agentic flow orchestration), Keras, TRL, OpenAI, Ollama, Hugging Face, OpenSearch/Chroma DB (for vector store)  
 - **Cloud & Deployment**: AWS: SageMaker/Bedrock/S3/OpenSearch/Boto3, Streamlit (for app deployment)
 
 
