@@ -1,0 +1,18 @@
+#namepsace
+apiVersion: v1
+kind: Namespace
+metadata: 
+  name: enterprise-rag
+  labels:
+    app: enterprise-rag
+
+  
+---
+#service account
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: enterprise-rag-service-account
+  namespace: enterprise-rag 
+  labels:
+    app: enterprise-rag  

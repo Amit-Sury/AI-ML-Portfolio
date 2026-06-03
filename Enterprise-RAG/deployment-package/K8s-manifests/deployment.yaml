@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: enterprise-rag-deployment
+  namespace: enterprise-rag
+  labels:
+    type: enterprise-rag-deployment  #use to categorize the deployment, helps to organize and to make query/fitering easy
+
+spec:
+  replicas: 1
+
+  selector:
+    matchLabels: #specifices which pods replcaset should monitor. It is based on the labels.
+      app: enterprise-rag #this should be same as the label we've provided for pod for replicaset to monitor
+  
+  template:
+    metadata:
+      labels:
+        app: enterprise-rag #will use this label in other manifest to have similar label
+    
+    spec:      
+      serviceAccountName: enterprise-rag-service-account
+      containers:
+        - name: enterprise-rag-container
+          #change aws_account_id with actual aws account id
+          image: aws_account_id.dkr.ecr.ap-south-1.amazonaws.com/enterprise-rag:latest
+          
+          ports:
+            - containerPort: 8000
+          
+          envFrom:
+            - secretRef:                
+                name: enterprise-rag-envfile      
+            #commenting configMapRef because ESO creates the resources as secrets
+            #- configMapRef:
+            #    name: enterprise-rag-envfile
+          
+        
+          
+  
