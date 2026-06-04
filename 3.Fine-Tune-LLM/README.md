@@ -24,10 +24,10 @@ The objective is to adapt the model to **telecom domain language and reasoning p
 ---
 ## Steps to Train on SageMaker
 - **Step 1:** Create a HuggingFace access token which is required to download the model and dataset. Token must have atleast read permission. 
-- **Step 2:** Update `HF_TOKEN` field in [finetune_Llama2_aws.ipynb](./Fine-Tune-LLM/notebook/finetune_Llama2_aws.ipynb) notebook with huggingface access token and sagemaker IAM `role` field with the correct sagemaker role name. 
+- **Step 2:** Update `HF_TOKEN` field in [finetune_Llama2_aws.ipynb](./notebook/finetune_Llama2_aws.ipynb) notebook with huggingface access token and sagemaker IAM `role` field with the correct sagemaker role name. 
 - **Step 3:** Login to AWS, go to **Amazon SageMaker AI** and start a notebook instance. Once instance is started, open the jupyter notebook.  
-- **Step 4:** In the notebook instance, upload [finetune_Llama2_aws.ipynb](./Fine-Tune-LLM/notebook/finetune_Llama2_aws.ipynb). Use `conda-python3` as kernel.
-- **Step 5:** Create a folder `scripts` in the notebook instance and upload scripts [finetune_lora.py](./Fine-Tune-LLM/scripts/finetune_lora.py) & [requirements.txt](./Fine-Tune-LLM/scripts/requirements.txt).  
+- **Step 4:** In the notebook instance, upload [finetune_Llama2_aws.ipynb](./notebook/finetune_Llama2_aws.ipynb). Use `conda-python3` as kernel.
+- **Step 5:** Create a folder `scripts` in the notebook instance and upload scripts [finetune_lora.py](./scripts/finetune_lora.py) & [requirements.txt](./scripts/requirements.txt).  
 - **Step 6:** Execute finetune_Llama2_aws.ipynb notebook. 
 - **Step 7:** Once done remember to **delete the endpoint** and **stop/delete the notebook instance** to avoid unnecessary charges.
   (Double-check the Endpoints, Model & Notebook page in **Sagemaker** to confirm deletion.)
