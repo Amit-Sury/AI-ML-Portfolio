@@ -32,7 +32,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Monitoring: CloudWatch  
 - **Deployment/Code Details**: [Visit Enterprise-RAG Page](./1.Enterprise-RAG)
 ---    
-### 2. 🤖 [GitRepoAssist-AI](./GitRepoAssist-AI)
+### 2. 🤖 [GitRepoAssist-AI](./2.GitRepoAssist-AI)
   
 ### *Intelligent GitHub Assistant — powered by Agentic AI*
 - **Goal**: GitRepoAssist-AI is an **Multi-tool ReAct Agent** that **integrates directly with GitHub** to help you analyze **pull requests, manage issues, and streamline repository insights** — all through intelligent **agentic automation**.
@@ -59,9 +59,9 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     - 🗃️ Overview of files included in a PR
     - 🧑‍💻 List all PR authors
     - 🗨️ Fetch all comments inside a PR 
-- **Deployment/Code Details**: [Visit GitRepoAssist-AI Page](./GitRepoAssist-AI/)
+- **Deployment/Code Details**: [Visit GitRepoAssist-AI Page](./2.GitRepoAssist-AI/)
 ---
-### 3. [Fine-Tuning LLM on Amazon SageMaker](./Fine-Tune-LLM)
+### 3. [Fine-Tuning LLM on Amazon SageMaker](./3.Fine-Tune-LLM)
 - **Goal**: Fine-tune a base **LLM** model (```meta/llama2-7b-hf```) using **Supervised Fine-Tuning (SFT)** and **PEFT techniques (LoRA)** on **Amazon SageMaker** with a focus on domain specialization.  
 - **Tech Stack**:
   - **Model**: meta/llama2-7b-hf (base/text generation), source: [Huggingface](https://huggingface.co/meta-llama/Llama-2-7b-hf)
@@ -77,10 +77,10 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     ###Input: Telecom-related questions
     ###Output: Answer
 ```
-  - **Deployment/Code Details**: [Visit Fine-Tune-LLM Page](./Fine-Tune-LLM/)
+  - **Deployment/Code Details**: [Visit Fine-Tune-LLM Page](./3.Fine-Tune-LLM/)
 ---
 
-### 4. [CNN](./CNN)
+### 4. [CNN](./4.CNN)
 - **Goal**: A **Convolutional Neural Network (CNN)** that classifies images of animals.  
 - **Tech Stack**: Python, TensorFlow, Keras, Pandas, Matplotlib  
 - **Highlights**:
@@ -88,11 +88,11 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Applied preprocessing and data augmentation (rotation, flipping, normalization) to improve model generalization.  
   - Leveraged **AWS SageMaker Script Mode** for custom training, packaging dependencies, and handling deployment.  
   - Deployed the model on **AWS SageMaker** for inference. 
-- **Deployment/Code Details**: [Visit CNN page](./CNN/)
+- **Deployment/Code Details**: [Visit CNN page](./4.CNN/)
 
 ---
 
-### 5. [AWS-Managed RAG](./AWS-RAG)
+### 5. [AWS-Managed RAG](./5.AWS-RAG)
 - **Goal**: A knowledge assistant chatbot using **Large Language Models (LLMs)** and **Retrieval-Augmented Generation (RAG)** to deliver accurate, context-aware responses.
 - **Tech Stack**: AWS (Bedrock, S3, OpenSearch), Python, Boto3, Streamlit 
 - **Highlights**:
@@ -100,10 +100,10 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Designed a **knowledge base pipeline** leveraging S3 and OpenSearch for scalable document storage and retrieval.
   - **Leveraged RAG for proprietary knowledge** retrieval while using the **LLM for general conversational capability**.
   - Built an **interactive UI with Streamlit** for seamless user interaction.
-- **Deployment/Code Details**: [Visit AWS-RAG Page](./AWS-RAG/)
+- **Deployment/Code Details**: [Visit AWS-RAG Page](./5.AWS-RAG/)
 ---
 
-### 6. [Local-RAG](./Local-RAG)
+### 6. [Local-RAG](./6.Local-RAG)
 - **Goal**: Build and interact with a **Local Retrieval-Augmented Generation (RAG) chatbot** using ChromaDB and Ollama. The chatbot allows you to query documents intelligently using embeddings.
 - **Tech Stack**: Python, Chroma DB, Ollama, Hugging face, Streamlit 
 - **Highlights**:
@@ -115,7 +115,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     - **Embedding model link**: https://hf.co/CompendiumLabs/bge-base-en-v1.5-gguf
     - **Language model link**: https://hf.co/bartowski/Llama-3.2-1B-Instruct-GGUF
 
-- **Deployment/Code Details**: [Visit Local-RAG Page](./Local-RAG/)
+- **Deployment/Code Details**: [Visit Local-RAG Page](./6.Local-RAG/)
   
 ---
 
