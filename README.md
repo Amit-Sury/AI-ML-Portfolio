@@ -1,5 +1,5 @@
 # 🚀 AI/ML Portfolio
-Welcome to my **AI/ML Project Portfolio**. This repository showcases selected projects I’ve worked on, highlighting my skills in **machine learning, deep learning, data science, and cloud deployment**.  
+Welcome to my **AI/ML Project Portfolio**. This repository showcases selected projects I’ve worked on, highlighting my skills in **AI/ML and cloud deployment**.  
 
 🔗 Feel free to explore the projects below. Each project folder contains code, documentation, and instructions for running the work.
 
