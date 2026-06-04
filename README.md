@@ -6,7 +6,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
 ---
 
 ## 📂 Projects
-### 1. [Enterprise-RAG](./Enterprise-RAG)
+### 1. [Enterprise-RAG](./1.Enterprise-RAG)
 - **Goal**: Enterprise-grade RAG platform demonstrating modern AI Engineering practices across **DataOps, LLMOps, GitOps, Security, and Observability** on AWS. 
 - **Key Features**:
   -  **DataOps**: Automated document ingestion and indexing pipeline:
@@ -30,7 +30,7 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
   - Security: Cognito, Secrets Manager, ESO, IAM
   - DevOps: Argo CD, GitOps
   - Monitoring: CloudWatch  
-- **Deployment/Code Details**: [Visit Enterprise-RAG Page](./Enterprise-RAG)
+- **Deployment/Code Details**: [Visit Enterprise-RAG Page](./1.Enterprise-RAG)
 ---    
 ### 2. 🤖 [GitRepoAssist-AI](./GitRepoAssist-AI)
   
