@@ -41,7 +41,7 @@ Compress-Archive -Path "python" -DestinationPath "lambda-layer.zip" -Force
 
 Compress-Archive -Path "ingestion_service_lambda.py" -DestinationPath "lambda.zip" -Force
 
-If performing manual upload then: 
+If performing manual upload then (Note: this is not required if deploying using deployment script): 
 
 6. Upload both the files in s3 bucket. Create a layer using lambda-layer.zip 
 (choose x86_64 as architecture and python 3.13 as environment)
