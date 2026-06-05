@@ -2,6 +2,7 @@
 
 This document explains the deployment order of the Enterprise RAG application. Also summarizes the whole architecture along the lines.
 
+> 💡 * [enterprise-rag-deploy.sh](./enterprise-rag-deploy.sh) automates this whole deployment process.*
 
 ## 1. Create ECR Registry
 
