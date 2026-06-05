@@ -10,6 +10,11 @@ Enterprise-grade AI Knowledge Platform on AWS showcasing **DataOps, LLMOps, GitO
 
 
 ---
+# 🔐 Authentication Flow
+
+[e2e-auth-flow](./call-flows/auth.md)
+
+---
 # 🐳 Steps to Deploy 
 > 💡 *README file of [deployment-package](./deployment-package) summarizes overall deployment process. Its a good reference to get overview of whole deployment process.*
 
