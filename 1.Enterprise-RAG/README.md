@@ -26,9 +26,9 @@ Enterprise-grade AI Knowledge Platform on AWS showcasing **DataOps, LLMOps, GitO
     docker build --no-cache -f ./Dockerfile -t enterpriese-rag .
   ```
   - **Step 3:** Follow the steps mentioned in [build_command.txt](./deployment-package/lambda-package/build_command.txt) to prepare lambda.zip and lambda-layer.zip (lambda layer). Keep these files in lambda-package folder.
-  - **Step 4:** Update "AWS_REGION", "AWS_ACCOUNT_ID" present in `VARIABLES BLOCK` in the script `enterprise-rag-deploy.sh` of 'deployment-package' folder.  
+  - **Step 4:** Update "AWS_REGION" present in `VARIABLES BLOCK` in the script `enterprise-rag-deploy.sh` of 'deployment-package' folder.  
   - **Step 5:** Deploy the app by executing `./enterprise-rag-deploy.sh`.
      > 💡 *Script will create a "output" folder in the current directory, do not delete `deletion_checkpoint.log` file. Delete script use this to find which all resources were created.*
   - **Step 6:** After deployment, script will display all the resource created and will show the API gateway URI. Use this URI in your browser to access the app. 
    
-  - **Step 7:** To delete all created AWS resources, run `./enterprise-rag-delete.sh`. Make sure to update the `AWS_REGION`, `AWS_ACCOUNT_ID` in the delete script before executing it. 
+  - **Step 7:** To delete all created AWS resources, run `./enterprise-rag-delete.sh`. Make sure to update the `AWS_REGION` in the delete script before executing it. 
