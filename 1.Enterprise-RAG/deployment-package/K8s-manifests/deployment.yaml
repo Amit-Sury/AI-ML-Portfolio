@@ -22,8 +22,8 @@ spec:
       serviceAccountName: enterprise-rag-service-account
       containers:
         - name: enterprise-rag-container
-          #change aws_account_id with actual aws account id
-          image: aws_account_id.dkr.ecr.ap-south-1.amazonaws.com/enterprise-rag:latest
+          #change <aws_account_id> with actual aws account id
+          image: <aws_account_id>.dkr.ecr.ap-south-1.amazonaws.com/enterprise-rag:latest
           
           ports:
             - containerPort: 8000
