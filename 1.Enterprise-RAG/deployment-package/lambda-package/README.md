@@ -8,4 +8,4 @@
 ├── requirements.txt                     # list of packages required for lambda-layer
 ```
   
-   💡 Refer build_command.txt for details 
+   💡 Refer [build_command.txt](./package-guide/build_command.txt) for details on how to create lambda packages zip files.
