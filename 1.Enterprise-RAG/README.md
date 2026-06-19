@@ -1,8 +1,39 @@
 # Enterprise-RAG
 Enterprise-grade AI Knowledge Platform on AWS showcasing **DataOps, LLMOps, GitOps, Security, and Observability** through automated document ingestion, semantic retrieval, guardrails, LLM evaluation, and Kubernetes-native deployment on Amazon EKS.
 
+### 🔁 Key Features
+- **Platform Engineering**
+  - FastAPI application
+  - EKS deployment
+  - API Gateway integration
+  - Cognito authentication
+  - ArgoCD GitOps deployment
+  - Fluent Bit → CloudWatch logging
+  - Deployment and teardown automation
+- **Security**
+  - JWT-based authentication flow
+  - Session management
+  - Prompt injection detection
+  - PII checks
+  - PCI checks
+  - Input/output guardrails
+- **LLM Engineering**
+  - RAG pipeline
+  - OpenSearch integration
+  - Context construction
+  - LLM-as-a-Judge evaluation
+  - Response validation
+  - Bedrock integration
+- **Production Readiness**
+  - Cache implementation
+  - Selective caching strategy
+  - Failure recovery in deployment scripts
+  - Checkpoint-based resume capability
+  - Safe deletion workflow
+  - Centralized monitoring and logging
+
 ---
-## 🧩 Deployment Architecture (AWS)
+# 🧩 Deployment Architecture (AWS)
 
 
 ---
@@ -15,6 +46,7 @@ Enterprise-grade AI Knowledge Platform on AWS showcasing **DataOps, LLMOps, GitO
 [e2e-auth-flow](./call-flows/auth.md)
 
 ---
+
 # 🐳 Steps to Deploy 
 > 💡 *README file of [deployment-package](./deployment-package) summarizes overall deployment process. Its a good reference to get overview of whole deployment process.*
 
