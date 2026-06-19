@@ -158,9 +158,8 @@ authorizer-lambda.zip
 - 📁 File Organization
 
 ```
-├── build_command.txt                    # steps to create lambda.zip (lambda function), lambda-layer.zip (lambda layer) package
-├── ingestion_service_lambda.py          # lambda function for data ingestion
-├── requirements.txt                     # list of packages required for lambda-layer
+├── /ingestion_service/                  # lambda script and requirement.txt for data ingestion service
+├── /lambda_authorizer/                  # lambda function and requirement.txt for authorizator lambda used by api gateway
 ```
  
    
