@@ -4,12 +4,8 @@ import logging
 logger = logging.getLogger(__name__)
 
 #Generate embeddings
-def generate_embedding(assumed_session, chunk):
+def generate_embedding(bedrock_client, chunk):
     
-    # Create Bedrock Runtime client
-    logger.info("ℹ️ Creating bedrock client...")
-    bedrock = assumed_session.client("bedrock-runtime")
-
     # Titan Embeddings V2 request body
     request_body = {
         "inputText": chunk, 
@@ -19,7 +15,7 @@ def generate_embedding(assumed_session, chunk):
     # Invoke Titan embedding model
     logger.info("ℹ️ Generating query embedding by using bedrock model.")
 
-    response = bedrock.invoke_model(
+    response = bedrock_client.invoke_model(
             modelId=os.getenv("EMBEDDING_MODEL_ID", "amazon.titan-embed-text-v2:0"),
             body=json.dumps(request_body),
             contentType="application/json",

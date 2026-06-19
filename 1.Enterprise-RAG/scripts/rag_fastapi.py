@@ -1,5 +1,5 @@
 ########## Import packages BEGIN ##########
-from fastapi import FastAPI, Request, Response, HTTPException, status
+from fastapi import FastAPI, Request
 from fastapi.responses import HTMLResponse, RedirectResponse
 import httpx
 import jwt
@@ -12,7 +12,6 @@ from retrieval_service import RetrievalService
 from ui_layout import ui_login, ui_logout, ui_access_denied
 from dotenv import load_dotenv
 import os
-from langchain_core.messages import HumanMessage, AIMessage
 import logging
 ########## Import packages END ##########
 
@@ -38,6 +37,58 @@ class UserQuery(BaseModel):
     text: str
 #### END ####
 
+## check env params
+def check_env():
+
+    logger.info("ℹ️ Checking required env configurations...")
+
+    ## check vector db hostname
+    VECTOR_DB_HOSTNAME = os.getenv("VECTOR_DB_HOSTNAME")
+    if not VECTOR_DB_HOSTNAME:
+        raise RuntimeError("VECTOR_DB_HOSTNAME is not configured")
+    
+    ## check cognito related parameters
+    cognito_domain_uri = os.getenv("COGNITO_DOMAIN_URI")
+    if not cognito_domain_uri:
+        raise RuntimeError("COGNITO_DOMAIN_URI is not configured")
+    
+    client_id = os.getenv("CLIENT_ID")
+    if not client_id:
+        raise RuntimeError("CLIENT_ID is not configured")
+    
+    client_secret = os.getenv("CLIENT_SECRET")
+    if not client_secret:
+        raise RuntimeError("CLIENT_SECRET is not configured")
+    
+    redirect_uri = os.getenv("REDIRECT_URI")
+    if not redirect_uri:
+        raise RuntimeError("REDIRECT_URI is not configured")
+    
+    if int(os.getenv("ENABLE_GUARDRAILS","0")):
+        
+        guardrail_id = os.getenv("AWS_GUARDRAIL_ID")
+        if not guardrail_id:
+            raise RuntimeError("AWS_GUARDRAIL_ID is not configured")
+
+        guardrail_version = os.getenv("AWS_GUARDRAIL_VERSION")
+        if not guardrail_version:
+            raise RuntimeError("AWS_GUARDRAIL_VERSION is not configured")
+    
+    if int(os.getenv("CACHE_TYPE","0")) == 1:
+        
+        redis_host = os.getenv("REDIS_HOST")
+        if not redis_host:
+            raise RuntimeError("REDIS_HOST is not configured")
+
+        redis_port = os.getenv("REDIS_PORT")
+        if not redis_port:
+            raise RuntimeError("REDIS_PORT is not configured")
+
+    logger.info("✅ env configurations are ok.")
+    return cognito_domain_uri, client_id, client_secret, redirect_uri
+
+## end ##
+
 ##### Fastapi handling BEGIN ##########
 
 ## Startup/shutdown handling ##
@@ -47,35 +98,25 @@ async def lifespan(app: FastAPI):
     logger.info("ℹ️ Initiating FastAPI app (lifespan)")
 
     try:
+
+        #check env configurations
+        (
+            cognito_domain_uri,
+            client_id,
+            client_secret,
+            redirect_uri,
+        ) = check_env()
     
-        logger.info("ℹ️ Checking required env configurations...")
-
-        ## check vector db hostname
-        VECTOR_DB_HOSTNAME = os.getenv("VECTOR_DB_HOSTNAME")
-        if not VECTOR_DB_HOSTNAME:
-            raise RuntimeError("VECTOR_DB_HOSTNAME is not configured")
-        
-        ## check cognito related parameters
-        cognito_domain_uri = os.getenv("COGNITO_DOMAIN_URI")
-        if not cognito_domain_uri:
-            raise RuntimeError("COGNITO_DOMAIN_URI is not configured")
-        
-        client_id = os.getenv("CLIENT_ID")
-        if not client_id:
-            raise RuntimeError("CLIENT_ID is not configured")
-        
-        client_secret = os.getenv("CLIENT_SECRET")
-        if not client_secret:
-            raise RuntimeError("CLIENT_SECRET is not configured")
-        
-        redirect_uri = os.getenv("REDIRECT_URI")
-        if not redirect_uri:
-            raise RuntimeError("REDIRECT_URI is not configured")
-
-        logger.info("✅ env configurations are ok.")
-
+        # create system resources
         logger.info("ℹ️ creating system resources...")
-        assumed_session, db_client, graph, judge_llm = startup()
+        (
+            bedrock_client,
+            db_client,
+            graph,
+            judge_llm,
+            cache,
+        ) = startup()
+
         logger.info("✅ system resources are created successfully.")
 
         app.state.config = {
@@ -83,10 +124,11 @@ async def lifespan(app: FastAPI):
             "client_id": client_id,
             "client_secret": client_secret,
             "redirect_uri": redirect_uri,
-            "assumed_session": assumed_session,
+            "bedrock_client": bedrock_client,
             "db_client": db_client,
             "graph": graph,
             "judge_llm": judge_llm,
+            "cache": cache,
         }
 
         logger.info("✅ Application startup successful")
@@ -120,7 +162,7 @@ async def obtain_jwt(
             "grant_type": "authorization_code",
             "client_id": request.app.state.config['client_id'],
             "client_secret": request.app.state.config['client_secret'],
-            "redirect_uri": request.app.state.config['redirect_uri'],
+            "redirect_uri": f"{request.app.state.config['redirect_uri']}/",
             "code": code            
         }
         
@@ -132,7 +174,15 @@ async def obtain_jwt(
 
         logger.info("post request sent, waiting for response...")
         response = await client.post(token_url, data=data, headers=headers)
-        tokens = response.json()        
+
+        if response.status_code != 200:
+            logger.error(
+                "Cognito token exchange failed: %s",
+                response.text
+            )
+            raise Exception("Authentication failed")
+        else:
+            tokens = response.json()        
         
     # Extract the JWTs
     logger.info("response received from cognito, extracting jwt...")
@@ -147,25 +197,22 @@ async def obtain_jwt(
 
 # root endpoint (/)
 @app.get("/", response_class=HTMLResponse)
-async def home(request: Request):
+async def login(request: Request):
 
-    logger.info(f"Root endpoint (GET /) invoked...")
-
+    
+    logger.info(f"Root endpoint (GET /) invoked...")   
+    
     code = request.query_params.get("code")
 
     # No code present means User is unauthenticated. Redirect to Cognito.
     if not code:
        
-       logger.info("Code not found in the request, redirecting to cognito for login")
+       logger.info("Code not found in the request, redirecting to cognito for login")       
        
-       logger.info(f"Client id={request.app.state.config['client_id']}")
-       logger.info(f"redirect_uri={request.app.state.config['redirect_uri']}")
-       logger.info(f"cognito_domain_uri={request.app.state.config['cognito_domain_uri']}")
-
        params = urlencode({
            "client_id": request.app.state.config['client_id'],
            "response_type": "code",
-           "redirect_uri": request.app.state.config['redirect_uri'],
+           "redirect_uri": f"{request.app.state.config['redirect_uri']}/",
         })
        
        login_url = f"{request.app.state.config['cognito_domain_uri']}/login?{params}"
@@ -175,28 +222,26 @@ async def home(request: Request):
 
     # When Code is present, means User is logged in. Obtaining JWT
     logger.info("Code is present in the request, user is logged in. Obtaining Jwt")
-    access_token, id_token = await obtain_jwt(code, request)
-
-    # getting user profile data from id_token
-    decoded_id_token = jwt.decode(id_token, options={"verify_signature": False})
+    try:
+        access_token, id_token = await obtain_jwt(code, request)
     
-    cognito_username = decoded_id_token.get("cognito:username")
-    user_email = decoded_id_token.get("email")
-    #logger.info(f"User has logged in user is: {cognito_username} with email: {user_email}")
+    except Exception:
+        ##code validation is failed
+        logger.error("Redirecting to access denied page")
+        return RedirectResponse(
+            url=f"{request.app.state.config['redirect_uri']}/access-denied?reason=invalid_session",
+            status_code=302
+        )
+
     logger.info(f"User has logged in successfully")
+    
+    response = RedirectResponse(
+        url=f"{request.app.state.config['redirect_uri']}/home",
+        status_code=302
+    )
 
-    # creating session
-    session_id = access_token
-    if session_id not in conversation_store:
-        conversation_store[session_id] = []
-
-    #getting the layout
-    html_content = ui_login(user_email)
-
-    response = HTMLResponse(content=html_content)
-
-    # Storing the token in a secure HTTP-only cookie here so subsequent API Gateway calls
-    # from the browser can automatically attach it. Using cookies instead of the Authorization
+    #set the cookies, using secure HTTP-only cookie here so subsequent API Gateway calls
+    #from the browser can automatically attach it. Using cookies instead of the Authorization
     # header completely eliminates Cross-Site Scripting (XSS) risks. To handle Cross-Site Request
     # Forgery (CSRF) vulnerabilities, adding samesite="strict"
 	#https://stackoverflow.com/questions/27067251/where-to-store-jwt-in-browser-how-to-protect-against-csrf
@@ -207,35 +252,77 @@ async def home(request: Request):
         httponly=True,
         secure=True,
         #secure=False,
-        samesite="strict"
+        samesite="lax",
+        path="/"
     )
 
-    return response
+    response.set_cookie(
+        key="id_token",
+        value=id_token,
+        httponly=True,
+        secure=True,
+        #secure=False,
+        samesite="lax",
+        path="/"
+    )
+
+    return response    
 ## end ##
+
+# home endpoint (/)
+@app.get("/home", response_class=HTMLResponse)
+async def home(request: Request):
+
+    
+    logger.info(f"Home endpoint (GET /home) invoked...")   
+    
+    #check if token is present
+    access_token = None
+    access_token = request.cookies.get("access_token")
+
+    #if token present then user has logged in
+    if access_token:
+        logger.info("access_token is present")
+        # getting user profile data from id_token
+        id_token = request.cookies.get("id_token")
+        decoded_id_token = jwt.decode(id_token, options={"verify_signature": False})
+        user_email = decoded_id_token.get("email")
+    
+        #getting the layout
+        html_content = ui_login(user_email,request.app.state.config['redirect_uri'])
+        response = HTMLResponse(content=html_content)
+        return response
+    else:
+        logger.error("access_token is not present, user is not loggedin")
+        logger.error("Redirecting to access denied page")
+        return RedirectResponse(
+            url=f"{request.app.state.config['redirect_uri']}/access-denied?reason=invalid-login-state",
+            status_code=302
+        )
 
 # userquery endpoint
 @app.post("/userquery")
 async def user_query(query: UserQuery, request: Request):
 
+    logger.info(f"'/userquery' (POST /userquery) endpoint invoked.")
     user_prompt = query.text
     
-    logger.info(f"'/userquery' (POST /userquery) endpoint invoked.")
     logger.info("ℹ️ Received user query. Creating retrieval service...")
-    logger.info(f"Cookies received:::: {request.cookies}")
-
+    
     #getting optional headers, api gateway adds these
-    #user_email = request.headers.get("X-Cognito-Email")
-    #user_roles = request.headers.get("X-Cognito-Groups")
-    access_token = request.cookies.get("access_token")
-    user_id = request.headers.get("X-Cognito-Sub")
+    x_user_id = request.headers.get("X-User-Id")
+    x_username = request.headers.get("X-Username")
+
+    logger.info(f"from X-User-Id header={x_user_id}")
+    logger.info(f"from X-Username header={x_username}")
     
     # checking user_id received in header ensures that request actually came through API Gateway
     # if not present then redirecting to access-denied page with logout and asks for login
-    if not user_id:
+    if not x_user_id:
         logger.error("User_id is not present, the request directly landed to app instead of via apigateway.")
         logger.error("Redirecting to access denied page")
         return RedirectResponse(
-            url="/access-denied?reason=invalid_accesspoint",
+            url=f"{request.app.state.config['redirect_uri']}/access-denied?reason=unauthorized-access",
             status_code=302
         )
 
@@ -243,21 +330,20 @@ async def user_query(query: UserQuery, request: Request):
     db_client = request.app.state.config['db_client']
     graph = request.app.state.config['graph']
     judge_llm = request.app.state.config['judge_llm']
-    assumed_session = request.app.state.config['assumed_session']
+    bedrock_client = request.app.state.config['bedrock_client']
+    cache = request.app.state.config['cache']
 
     # session conversation handling
-    session_id = access_token
+    session_id = x_user_id
     if session_id not in conversation_store:
         conversation_store[session_id] = []
 
-    conversation_store[session_id].append(HumanMessage(content=user_prompt))
-
-    service = RetrievalService(db_client, graph, judge_llm)
+    service = RetrievalService(db_client, graph, judge_llm, cache)
     logger.info("ℹ️ Retrieval service created. Executing the service...")
-    response = service.retrieve(assumed_session, user_prompt)
+    response = service.retrieve(bedrock_client, user_prompt, conversation_store[session_id])
     logger.info("ℹ️ Execution of Retrieval service completed. Returning the response to user")
 
-    conversation_store[session_id].append(AIMessage(content=response["answer"]))
+    
     
     return response
 ## end ##
@@ -286,11 +372,11 @@ async def logout(request: Request):
 
 # logged-out page
 @app.get("/logged-out", response_class=HTMLResponse)
-async def logged_out_page():
+async def logged_out_page(request: Request):
 
     logger.info(f"'/logged-out' (GET /logged-out) endpoint invoked.")
 
-    html_content = ui_logout()
+    html_content = ui_logout(request.app.state.config['redirect_uri'])
 
     logger.info(f"User has successfully logged out.")
     logger.info(f"Returing logout response to the user.")
@@ -305,7 +391,7 @@ async def access_denied(request: Request):
     logger.info(f"'/access-denied' (GET /access-denied) endpoint invoked.")
     logger.info("handling access-denied process...")
 
-    html_content = ui_access_denied(reason)
+    html_content = ui_access_denied(reason, request.app.state.config['redirect_uri'])
 
     logger.info(f"User will be auto redirect to logout page.")
     return HTMLResponse(content=html_content)
@@ -320,6 +406,7 @@ if __name__ == "__main__":
         "rag_fastapi:app",
         host="0.0.0.0",
         port=8000,
-        reload=True
+        #reload=True
+        reload=False
     )
 #### END ####

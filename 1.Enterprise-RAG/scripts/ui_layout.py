@@ -1,6 +1,6 @@
 
 ## main page ##
-def ui_login(user_email):
+def ui_login(user_email, root_path):
     
     html_content = """
     <!DOCTYPE html>
@@ -155,7 +155,9 @@ def ui_login(user_email):
                     0 4px 10px rgba(0,0,0,0.04);
                 width: 830px;     
                 margin: 0 auto;   
-                margin-bottom: 18px;               
+                margin-bottom: 18px;   
+                position: relative;
+                overflow: visible;            
             }
 
             .result-content {
@@ -176,11 +178,14 @@ def ui_login(user_email):
             .copy-icon-button {
 
                 margin-left: auto;
+                position: absolute;
+                right: -50px;
+                bottom: 10px;
                 border: none;
                 background: #eef2f7;
                 color: #6b7280;
-                width: 38px;
-                height: 38px;
+                width: 30px;
+                height: 30px;
                 cursor: pointer;
                 transition: all 0.2s ease;                
             }
@@ -262,7 +267,7 @@ def ui_login(user_email):
 
             <div class="user-section">
                 <span class="username">__USER_EMAIL__</span>
-                <a href="/logout" class="logout-link">Logout</a>
+                <a href="__LOGOUT__" class="logout-link">Logout</a>
             </div>
         </div>
 
@@ -325,7 +330,7 @@ def ui_login(user_email):
 
                 try {
 
-                    const response = await fetch("/userquery", {
+                    const response = await fetch("__USER_QUERY__", {
 
                         method: "POST",
 
@@ -427,16 +432,26 @@ def ui_login(user_email):
     </html>
     """
 
-    html_content = html_content.replace(
-        "__USER_EMAIL__",
-        user_email
-    )
+    #html_content = html_content.replace(
+    #    "__USER_EMAIL__",
+    #    user_email
+    #)
+
+    replacements = {
+        "__USER_EMAIL__": user_email,
+        "__USER_QUERY__": f"{root_path}/userquery",
+        "__LOGOUT__": f"{root_path}/logout"
+    }
+
+
+    for key, value in replacements.items():
+        html_content = html_content.replace(key, value)
 
     return html_content
 ## end ##
 
 ## logout page
-def ui_logout():
+def ui_logout(root_path):
     
     html_content = """
     <!DOCTYPE html>
@@ -502,7 +517,7 @@ def ui_logout():
 
             .logout-card {
 
-                width: 500px;
+                width: 600px;
 
                 margin: 120px auto;
 
@@ -548,7 +563,7 @@ def ui_logout():
 
                 text-decoration: none;
 
-                padding: 12px 24px;
+                padding: 8px 24px;
 
                 border-radius: 10px;
 
@@ -598,7 +613,7 @@ def ui_logout():
                     You have been successfully signed out of Enterprise Search.
                 </div>
 
-                <a href="/" class="login-link">
+                <a href="__LOGIN__" class="login-link">
                     Login Again
                 </a>
 
@@ -610,10 +625,13 @@ def ui_logout():
 
     </html>
     """
+
+    html_content = html_content.replace("__LOGIN__", f"{root_path}/")
+
     return html_content
 ## end ##
 
-def ui_access_denied(reason):
+def ui_access_denied(reason, root_path):
    
     html_content = """
     <!DOCTYPE html>
@@ -719,7 +737,7 @@ def ui_access_denied(reason):
 
                 text-decoration: none;
 
-                padding: 12px 24px;
+                padding: 8px 24px;
                 border-radius: 10px;
 
                 font-size: 14px;
@@ -769,7 +787,7 @@ def ui_access_denied(reason):
                     seconds...
                 </div>
 
-                <a href="/logout" class="logout-link">
+                <a href="__LOGOUT__" class="logout-link">
                     Logout Now
                 </a>
 
@@ -793,7 +811,7 @@ def ui_access_denied(reason):
 
                     clearInterval(timer);
 
-                    window.location.href = "/logout";
+                    window.location.href = "__LOGOUT__";
                 }
 
             }, 1000);
@@ -805,10 +823,8 @@ def ui_access_denied(reason):
     </html>
     """
 
-    html_content = html_content.replace(
-        "__REASON__",
-        reason
-    )
+    html_content = html_content.replace("__REASON__",reason)
+    html_content = html_content.replace("__LOGOUT__",f"{root_path}/logout")
     
     return html_content
 

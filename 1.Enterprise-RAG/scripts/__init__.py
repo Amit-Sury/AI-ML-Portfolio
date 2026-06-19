@@ -9,5 +9,4 @@ from .create_index import create_index
 from .ui_layout import ui_login, ui_logout, ui_access_denied
 from .guardrails_classes import ClaimsStatus, GuardrailResult
 from .guardrails_service import GuardrailService
-
-from .guardrails_service import gen_structure_response
+from .cache import Cache, LocalCache, RedisCache, CacheType

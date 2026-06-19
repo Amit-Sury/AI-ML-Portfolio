@@ -68,13 +68,14 @@ class ValidationResult(Enum):
     PASS = "PASS"
     FAIL = "FAIL"
     REGENERATE = "REGENERATE"
+    CONTINUE = "CONTINUE"
 
 #Guardrail result
 @dataclass
 class GuardrailResult:
     status: ValidationResult
     response: str
-    score: float
+    score: float | None = None
     #reason: str | None = None
 
 #### Data Class definition END ####
