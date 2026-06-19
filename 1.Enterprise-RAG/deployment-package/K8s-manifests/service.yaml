@@ -5,11 +5,9 @@ metadata:
   name: enterprise-rag-service  
   namespace: enterprise-rag
   annotations:
-    service.beta.kubernetes.io/aws-load-balancer-scheme: internet-facing
-    #commenting below as creating these were resulting in failure 
-    #service.beta.kubernetes.io/aws-load-balancer-type: external
-    #service.beta.kubernetes.io/aws-load-balancer-scheme: internal    
-    #service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
+    service.beta.kubernetes.io/aws-load-balancer-type: external
+    service.beta.kubernetes.io/aws-load-balancer-scheme: internal    
+    service.beta.kubernetes.io/aws-load-balancer-nlb-target-type: ip
     
   labels:
     app: enterprise-rag    
