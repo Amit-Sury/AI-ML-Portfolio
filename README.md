@@ -19,10 +19,11 @@ Welcome to my **AI/ML Project Portfolio**. This repository showcases selected pr
     LLM → Output Guardrails (LLM-as-a-Judge) → Response
     ```
   -  **GitOps & CI/CD**: Argo CD, Git-based deployments, Declarative Kubernetes manifests.
-  -  **Security**:  IAM least-privilege access, AWS Secrets Manager / SSM Parameter Store, External Secrets Operator (ESO)
+  -  **Security**:  Cognito (jwt based auth) , IAM least-privilege access, AWS Secrets Manager / SSM Parameter Store, External Secrets Operator (ESO)
   -  **Observability**: Amazon CloudWatch Logs, application monitoring
 - **Tech Stack**:
   - AI/LLM: Amazon Bedrock, LangChain, LangGraph
+  - Frontend: AWS API Gateway
   - Backend: FastAPI
   - Platform: Amazon EKS, Kubernetes
   - Data Layer: Amazon S3, OpenSearch
