@@ -43,6 +43,14 @@ Used as the vector database.
 * Uses artifacts uploaded in Step 3
 * This acts as data ingestion pipeline for storing documents into the OpenSearch vector database
 
+#### S3 document bucket
+
+* Creates S3 bucket to be used as source for raw knowledge docs
+
+#### AWS Bedrock Guardrails
+
+* Creates Bedrock guardrails for input guardrails (prompt injection, PII, PCI checks).
+  
 ---
 
 ## 5. Create EKS Cluster
@@ -57,28 +65,17 @@ All application pods will run in this cluster.
 
 ### Resources Created
 
-### Retrieval Service IAM Role
+### Following IAM Roles
+
+* **Retrieval Service Role**:  Allows EKS pods to temporarily obtain AWS permissions and securely access AWS services.
+* **External Secrets Operator Role**: Allows External Secrets Operator (ESO) to access AWS Parameter Store, AWS Secrets Manager.
+* **Fluentbit Role**: Allows fluentbit to put log streams to AWS CloudWatch.
 
 Provides access to:
 
 ```text
 pods.eks.amazonaws.com
 ```
-
-Allows EKS pods to temporarily obtain AWS permissions and securely access AWS services.
-
-### External Secrets Operator IAM Role
-
-Provides access to:
-
-```text
-pods.eks.amazonaws.com
-```
-
-Allows External Secrets Operator (ESO) to access:
-
-* AWS Parameter Store
-* AWS Secrets Manager
 
 ### VPC Link
 
@@ -106,9 +103,17 @@ NLB
 Pods
 ```
 
+### Authorization lambda Function
+
+Used by API gateway to validate user's access token with Cognito public keys before routing traffic to FastAPI private endpoints. 
+
 ### Cognito Resources
 
 Creates resources required for managed login and authentication.
+
+### Valkey Cache cluster
+
+Creates Valkey cache cluster which is used to store prompt-response caching. 
 
 ---
 
