@@ -1,0 +1,13 @@
+serviceAccount:
+  name: fluent-bit
+
+cloudWatchLogs:
+  enabled: true
+  region: ap-south-1
+  logGroupName: "/aws/eks/fluentbit-cloudwatch/logs"
+
+additionalFilters: |
+  [FILTER]
+      Name   grep
+      Match  kube.*
+      Regex  $kubernetes['namespace_name'] enterprise-rag
