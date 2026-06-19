@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates OS Serverless Collection and lambda for enterprise rag
+Description: Creates OS Serverless Collection, ingestion lambda, S3 document bucket, bedrock guardrail for enterprise rag
 
 ##################### Parameter Block BEGIN #####################
 Parameters:
@@ -21,7 +21,10 @@ Parameters:
 
 ##################### Resources Block BEGIN #####################
 Resources:
+  
+  # --------------------------------
   #OS collection encryption policy
+  # --------------------------------  
   OpenSearchEncryptionPolicy:
     Type: AWS::OpenSearchServerless::SecurityPolicy
     Properties:
@@ -40,7 +43,9 @@ Resources:
           "AWSOwnedKey": true
         }
   
+  # --------------------------------
   #OS collection network policy
+  # --------------------------------  
   OpenSearchNetworkPolicy:
     Type: AWS::OpenSearchServerless::SecurityPolicy
     Properties:
@@ -67,7 +72,9 @@ Resources:
           }
         ]
 
+  # --------------------------------
   #OS collection data access policy
+  # --------------------------------  
   OpenSearchAccessPolicy:
     Type: AWS::OpenSearchServerless::AccessPolicy
     Properties:
@@ -110,7 +117,9 @@ Resources:
           }
         ]
 
+  # --------------------------------
   #OS serverless collection
+  # --------------------------------  
   OpenSearchCollection:
     Type: AWS::OpenSearchServerless::Collection
     DependsOn:
@@ -169,7 +178,9 @@ Resources:
                   - !Sub arn:aws:s3:::${PrefixName}-lambda-artifacts/*
 
   #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-function.html
+  # --------------------------------
   #Ingestion lambda definition
+  # --------------------------------    
   IngestionLambda:
     Type: AWS::Lambda::Function
     Properties:
@@ -191,7 +202,9 @@ Resources:
           EMBEDDING_MODEL_ID: !Ref EmbeddingModel
 
   #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-layerversion.html
+  # --------------------------------
   #lambda layer
+  # --------------------------------    
   LambdaLayer:
     Type: AWS::Lambda::LayerVersion
     Properties:
@@ -203,7 +216,9 @@ Resources:
         - python3.13
 
   #https://docs.aws.amazon.com/AWSCloudFormation/latest/TemplateReference/aws-resource-lambda-permission.html  
+  # --------------------------------
   #Ingestion lambda Invoke permission
+  # --------------------------------    
   LambdaInvokePermission:
     Type: AWS::Lambda::Permission
     Properties:
@@ -212,7 +227,9 @@ Resources:
       Principal: s3.amazonaws.com
       SourceArn: !Sub arn:aws:s3:::${PrefixName}-knowledge-docs
 
+  # --------------------------------
   #knowledge documents bucket
+  # --------------------------------      
   DocumentsBucket:
     Type: AWS::S3::Bucket
     DependsOn:
@@ -224,6 +241,63 @@ Resources:
         LambdaConfigurations:
           - Event: s3:ObjectCreated:*
             Function: !GetAtt IngestionLambda.Arn
+
+  # --------------------------------
+  # Bedrock Guardrail configuration
+  # --------------------------------        
+  SecurityGuardrail:
+    Type: AWS::Bedrock::Guardrail
+    Properties:
+      Name: !Sub ${PrefixName}-guardrail
+      Description: 'Blocks prompt injections and redacts sensitive PII (Email, Phone, CC, CVV)'
+      # Messaging sent back when a user prompt or model response is blocked
+      BlockedInputMessaging: 'Sorry! the query violates corporate security policies, system is unable to process it.'
+      BlockedOutputsMessaging: 'The generated response was blocked due to data security guidelines.'
+      # prompt injections and jailbreaks check
+      ContentPolicyConfig:
+        FiltersConfig:
+          - Type: PROMPT_ATTACK
+            InputStrength: HIGH
+            OutputStrength: NONE  # Prompt attacks only apply to user input queries
+      # PII identification and processing
+      SensitiveInformationPolicyConfig:
+        PiiEntitiesConfig:
+          - Type: EMAIL
+            Action: ANONYMIZE
+            InputEnabled: true
+            InputAction: ANONYMIZE
+            OutputEnabled: false
+          - Type: PHONE
+            Action: ANONYMIZE
+            InputEnabled: true
+            InputAction: ANONYMIZE
+            OutputEnabled: false          
+          - Type: CREDIT_DEBIT_CARD_NUMBER
+            Action: ANONYMIZE
+            InputEnabled: true
+            InputAction: ANONYMIZE
+            OutputEnabled: false            
+          - Type: CREDIT_DEBIT_CARD_CVV
+            Action: ANONYMIZE
+            InputEnabled: true
+            InputAction: ANONYMIZE
+            OutputEnabled: false          
+          - Type: PIN
+            Action: ANONYMIZE
+            InputEnabled: true
+            InputAction: ANONYMIZE
+            OutputEnabled: false 
+
+  # --------------------------------
+  # version of the Guardrail 
+  # --------------------------------        
+  SecurityGuardrailVersion:
+    Type: AWS::Bedrock::GuardrailVersion
+    DependsOn: SecurityGuardrail
+    Properties:
+      GuardrailIdentifier: !Ref SecurityGuardrail
+      Description: v1
+      
 ##################### Resources Block END #####################
 
 ##################### Output Block BEGIN #####################
@@ -234,5 +308,15 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-OpenSearchCollection"
 
+  oGuardrailId:
+    Description: 'The Unique Identifier of the created Bedrock Guardrail'
+    Value: !GetAtt SecurityGuardrail.GuardrailId
+    Export:
+      Name: !Sub "${AWS::StackName}-GuardrailID"
 
+  oGuardrailVersion:
+    Description: 'The specific version number generated for API consumption'
+    Value: !GetAtt SecurityGuardrailVersion.Version
+    Export:
+      Name: !Sub "${AWS::StackName}-GuardrailVersion"
 

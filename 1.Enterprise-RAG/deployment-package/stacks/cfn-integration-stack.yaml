@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates NLB ApiGw Integration, APIGateway route and stage for enterprise-rag
+Description: Creates NLB ApiGw Integration, APIGateway routes and stage for enterprise-rag
 
 ####################### Parameter Block BEGIN #####################
 Parameters:
@@ -12,15 +12,20 @@ Parameters:
   APIGatewayHttpApi:
     Description: API Gateway ID created by cfn-infra-stack.
     Type: String
-
+  
   VpcLink:
     Description: VPC link created by cfn-infra-stack.    
     Type: String
   
-  K8sNLBDnsName:
-    Description: K8s nlb dns created by kubenetes service loadbalancer type
+  NLBListenerArn:
+    Description: K8s nlb listener created by kubenetes service loadbalancer type
     Type: String
-    
+
+  ApiJwtAuthorizer:
+    Description: API gateway jwt authorizer created by cfn-infra-stack
+    Type: String
+  
+      
 ######################## END  ###################################
 
 ################ Resource Block BEGIN ###########################
@@ -41,74 +46,75 @@ Resources:
       IntegrationMethod: ANY
       ConnectionType: VPC_LINK
       ConnectionId: !Ref VpcLink
-      PayloadFormatVersion: "1.0"
-      #currently using placeholder, this will be updated later once service is created.
-      IntegrationUri: !Sub "http://${K8sNLBDnsName}"
-	  
+      PayloadFormatVersion: "1.0"      
+      IntegrationUri: !Ref NLBListenerArn
 
+  # -------------------
+  # Integration for POST /userquery
+  # this will send additional parameters obtained from lambda authorizer  
+  # -------------------
+  UserQueryIntegration:
+    Type: AWS::ApiGatewayV2::Integration
+    Properties:
+      ApiId: !Ref APIGatewayHttpApi
+      IntegrationType: HTTP_PROXY
+      IntegrationMethod: ANY
+      ConnectionType: VPC_LINK
+      ConnectionId: !Ref VpcLink
+      PayloadFormatVersion: "1.0"
+      IntegrationUri: !Ref NLBListenerArn
+      RequestParameters:
+        append:header.x-user-id: "$context.authorizer.userId"
+        append:header.x-username: "$context.authorizer.username"
+  
   # =========================================================================
   # API gateway PUBLIC ROUTES (No Authorizer Enabled)
   # API Gateway forwards to NLB integration specified by NLBApiGwIntegration
   # =========================================================================:   
   
   # -------------------
-  # Root endpoint (GET /) 
+  # Default 
   # -------------------
   RootRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref APIGatewayHttpApi
-      RouteKey: 'GET /'
+      RouteKey: 'ANY /{proxy+}'
       Target: !Join
         - /
         - - integrations
           - !Ref NLBApiGwIntegration
 
   # -------------------
-  # Refresh token endpoint (POST /refresh) 
+  # Root GET /
   # -------------------
-  RefreshRoute:
+  RootPathRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref APIGatewayHttpApi
-      RouteKey: 'POST /refresh'
+      RouteKey: 'ANY /'
       Target: !Join
         - /
         - - integrations
           - !Ref NLBApiGwIntegration
-  
-  # -------------------
-  # logged-out endpoint (POST /refresh) 
-  # -------------------
-  LoggedOutRoute:
-    Type: AWS::ApiGatewayV2::Route
-    Properties:
-      ApiId: !Ref APIGatewayHttpApi
-      RouteKey: 'GET /logged-out'
-      Target: !Join
-        - /
-        - - integrations
-          - !Ref NLBApiGwIntegration
-
   # =========================================================================
   # API gateway PRIVATE ROUTES (Authorizer Enabled)
   # =========================================================================:  
-
+  
   # -------------------
-  # Using default which matches with rest all endpoints 
+  # POST /userquery
   # -------------------
-  DefaultRoute:
+  UserQueryRoute:
     Type: AWS::ApiGatewayV2::Route
     Properties:
       ApiId: !Ref APIGatewayHttpApi
-      RouteKey: "$default"
-      AuthorizationType: JWT
+      RouteKey: "POST /userquery"
+      AuthorizationType: CUSTOM
       AuthorizerId: !Ref ApiJwtAuthorizer
       Target: !Join
         - /
         - - integrations
-          - !Ref NLBApiGwIntegration
-
+          - !Ref UserQueryIntegration
 
   # -------------------
   # API Stage
@@ -117,8 +123,7 @@ Resources:
     Type: AWS::ApiGatewayV2::Stage
     Properties:
       ApiId: !Ref APIGatewayHttpApi
-      StageName: production
-      AutoDeploy: true	  
-   
+      StageName: "$default"
+      AutoDeploy: true
 ##################### Resource Block END #####################
 

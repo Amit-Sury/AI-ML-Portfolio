@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: '2010-09-09'
-Description: Creates infrastructure resources (IAM roles, cognito, APIGateway, VPC Link) for enterprise-rag
+Description: Creates infrastructure resources (IAM roles, cognito, APIGateway, VPC Link, valkey cluster) for enterprise-rag
 
 ####################### Parameter Block BEGIN ########################
 Parameters:
@@ -8,15 +8,26 @@ Parameters:
     Type: String
     Default: enterprise-rag
 
-  #Network Settings
+  # eks vpc id
   VPCId:
     Description: The VPC ID created by eksctl where EKS is running.
     Type: AWS::EC2::VPC::Id
 
+  # eks private subnets id
   PrivateSubnetIds:
     Description: Private subnet IDs where the internal NLB will live.    
     Type: List<AWS::EC2::Subnet::Id>
+
+  # eks node group
+  EksNodeSecurityGroup:
+    Type: String
     
+  #cognito managed login version
+  ManagedLoginVersion:
+    Description: Managed login version for cognito 
+    Type: String
+    Default: 2
+  
 ######################## END  ###################################
 
 ################ Resource Block BEGIN ###########################
@@ -44,13 +55,19 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
-              # Bedrock Permissions
+              # Bedrock Model Permissions
               - Effect: Allow
                 Action:
                   - bedrock:InvokeModel
-                  - bedrock:InvokeModelWithResponseStream
+                  - bedrock:InvokeModelWithResponseStream                  
                 Resource: 
                   - 'arn:aws:bedrock:*::foundation-model/*'
+              # Bedrock Guardrail Permissions
+              - Effect: Allow
+                Action:
+                  - bedrock:ApplyGuardrail
+                Resource: 
+                  - !Sub 'arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:guardrail/*'                  
               # OpenSearch Serverless Vector DB Permissions
               - Effect: Allow
                 Action:
@@ -90,13 +107,41 @@ Resources:
                   - ssm:GetParameters
                   - ssm:GetParametersByPath
                 Resource: "*"
-
-              #commenting below are currently there are no secrets to be stored in secret manager
+              
               # Secrets Manager Access
-              #- Effect: Allow
-              #  Action:
-              #    - secretsmanager:GetSecretValue
-              #  Resource: "*"
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: "*"
+
+  # -------------------
+  # IAM role for Fluentbit to enable logs in cloudwatch
+  # -------------------
+  FluentbitRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${PrefixName}-fluentbit-role
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: pods.eks.amazonaws.com
+            Action:
+              - sts:AssumeRole
+              - sts:TagSession
+      Policies:
+        - PolicyName: !Sub ${PrefixName}-fluentbit-policy
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - logs:CreateLogGroup
+                  - logs:CreateLogStream
+                  - logs:DescribeLogStreams
+                  - logs:PutLogEvents
+                Resource: '*'
 
   # -------------------
   # VPC Link security group
@@ -142,8 +187,23 @@ Resources:
       UserPoolName: !Sub ${PrefixName}-userpool
       UsernameConfiguration:
         CaseSensitive: false
-      AutoVerifiedAttributes:
+      AliasAttributes:              # Allow login with either username or email
         - email
+      AdminCreateUserConfig:        # Enable self-registration
+        AllowAdminCreateUserOnly: false
+      AutoVerifiedAttributes:       # Automatically verify email addresses
+        - email
+      VerificationMessageTemplate:
+        DefaultEmailOption: CONFIRM_WITH_CODE
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+        - Name: name
+          AttributeDataType: String
+          Required: true
+          Mutable: true
   
   # -------------------
   # Cognito domain prefix for the Hosted UI
@@ -151,8 +211,9 @@ Resources:
   UserPoolDomain:
     Type: AWS::Cognito::UserPoolDomain
     Properties:
-      Domain: !Ref PrefixName
+      Domain: !Sub ${PrefixName}
       UserPoolId: !Ref UserPool
+      ManagedLoginVersion: !Ref ManagedLoginVersion
 
   # -------------------
   # Cognito app client
@@ -164,43 +225,160 @@ Resources:
     Properties:
       ClientName: !Sub ${PrefixName}-login-client
       UserPoolId: !Ref UserPool
-      GenerateSecret: true # Generates CLIENT_SECRET for server-to-server calls
+      GenerateSecret: true        # Keep true if FastAPI backend performs token exchange
       ExplicitAuthFlows:
         - ALLOW_USER_PASSWORD_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
       AllowedOAuthFlowsUserPoolClient: true
       AllowedOAuthFlows:
-        - code # Supports authorization code grant flow
+        - code
       AllowedOAuthScopes:
         - openid
         - email
         - profile
       CallbackURLs:
-          # Redirects straight to API gateway which send to fastapi root endpoint
-        - !GetAtt APIGatewayHttpApi.ApiEndpoint 
+        - !Sub
+          - '${ApiEndpoint}/'
+          - ApiEndpoint: !GetAtt APIGatewayHttpApi.ApiEndpoint        
       LogoutURLs:
         - !Sub
           - '${ApiEndpoint}/logged-out'
-          - ApiEndpoint: !GetAtt APIGatewayHttpApi.ApiEndpoint
+          - ApiEndpoint: !GetAtt APIGatewayHttpApi.ApiEndpoint 
       SupportedIdentityProviders:
         - COGNITO
 
   # -------------------
-  # API Gateway JWT Authorizer to read tokens from the Cookie header
+  # Cognito managed login branding
+  # -------------------  
+  ManagedLoginBranding:
+    Type : AWS::Cognito::ManagedLoginBranding
+    Properties:
+      Assets:
+      - Bytes: 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AAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQgPgLAAAAAAAAUID4CwAAAAAAAFCA+AsAAAAAAABQwP8FBXnEzqVFNmAAAAAASUVORK5CYII=
+        Category: PAGE_BACKGROUND
+        ColorMode: LIGHT
+        Extension: PNG  
+      Settings:        
+        components:      
+          primaryButton:        
+            lightMode:        
+              defaults:
+                backgroundColor: 4f7ea8ff
+                textColor: ffffffff                
+      UseCognitoProvidedValues: false
+      UserPoolId: !Ref UserPool
+      ClientId: !Ref UserPoolClient
+
+  # -------------------
+  # IAM role for api gateway authorization lambda
+  # -------------------
+  LambdaExecutionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: !Sub ${PrefixName}-authorization-lambda-execution-role
+      Description: IAM Role for authorization lambda function which used by api gateway
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: 
+              - sts:AssumeRole              
+  
+  # -------------------
+  # Authorization lambda
+  # -------------------
+  AuthorizationLambda:
+    Type: AWS::Lambda::Function
+    Properties:
+      FunctionName: !Sub ${PrefixName}-authorization-lambda
+      Runtime: python3.13
+      Handler: apigateway_authorizer_lambda.lambda_handler
+      Role: !GetAtt LambdaExecutionRole.Arn
+      MemorySize: 3000
+      Timeout: 60
+      Code:
+        S3Bucket: !ImportValue cfn-s3-stack-LambdaArtifactBucketName
+        S3Key: authorizer-lambda.zip
+      Layers:
+        - !Ref AuthorizationLambdaLayer
+      Environment:
+        Variables:
+          COGNITO_USER_POOL_ID: !Ref UserPool
+          COGNITO_APP_CLIENT_ID: !Ref UserPoolClient
+
+  # --------------------------------
+  #Authorization lambda layer
+  # --------------------------------    
+  AuthorizationLambdaLayer:
+    Type: AWS::Lambda::LayerVersion
+    Properties:
+      LayerName: !Sub ${PrefixName}-authorization-lambda-layer
+      Content:
+        S3Bucket: !ImportValue cfn-s3-stack-LambdaArtifactBucketName
+        S3Key: authorizer-lambda-layer.zip
+      CompatibleRuntimes:
+        - python3.13
+
+  # -------------------
+  # API Gateway JWT lambda Authorizer to authorize jwt present in Cookie header
   # -------------------   
   ApiJwtAuthorizer:
     Type: AWS::ApiGatewayV2::Authorizer
+    DependsOn: AuthorizationLambda
     Properties:
-      Name: !Sub ${PrefixName}-CognitoCookieAuthorizer
+      Name: !Sub ${PrefixName}-LambdaJwtAuthorizer
       ApiId: !Ref APIGatewayHttpApi
-      AuthorizerType: JWT
-      IdentitySources:
-        - '$request.header.Cookie' # Custom configuration to intercept secure cookies
-      JwtConfiguration:
-        Audience:
-          - !Ref UserPoolClient
-        Issuer: !Sub 'https://cognito-idp.${AWS::Region}://{UserPool}'  
+      AuthorizerType: REQUEST
+      AuthorizerPayloadFormatVersion: "2.0"
+      EnableSimpleResponses: true
+      IdentitySource:
+        - '$request.header.Cookie' # Custom configuration to intercept secure cookies        
+      AuthorizerUri: !Sub arn:aws:apigateway:${AWS::Region}:lambda:path/2015-03-31/functions/${AuthorizationLambda.Arn}/invocations
 
+  # -------------------
+  # API Gateway JWT lambda Authorizer permission
+  # -------------------  
+  ApiGatewayInvokeAuthorizerPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      Action: lambda:InvokeFunction
+      FunctionName: !Ref AuthorizationLambda
+      Principal: apigateway.amazonaws.com
+      SourceAccount: !Ref 'AWS::AccountId'
+  
+  # -------------------
+  # Valkey cache security group
+  # -------------------  
+  CacheSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow EKS to access Valkey
+      VpcId: !Ref VPCId
+      Tags:
+        - Key: Name
+          Value: !Sub ${PrefixName}-cache-securitygrp
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 6379
+          ToPort: 6379
+          SourceSecurityGroupId: !Ref EksNodeSecurityGroup
 
+  # -------------------
+  # Valkey cache cluster
+  # -------------------  
+  ValkeyCluster:
+    Type: AWS::ElastiCache::ServerlessCache
+    Properties:
+      ServerlessCacheName: !Sub ${PrefixName}-valkey-cache
+      Engine: valkey
+      SecurityGroupIds:
+        - !Ref CacheSecurityGroup
+      SubnetIds: !Ref PrivateSubnetIds
+        
 ##################### Resource Block END #####################
 
 ##################### Output Block BEGIN #####################
@@ -216,6 +394,12 @@ Outputs:
     Value: !GetAtt ESOServiceRole.Arn
     Export:
       Name: !Sub "${AWS::StackName}-ESOServiceRoleArn"  
+  
+  oFluentbitServiceRole:
+    Description: Give this ARN to your EKS admin to bind to the Kubernetes service account.
+    Value: !GetAtt FluentbitRole.Arn
+    Export:
+      Name: !Sub "${AWS::StackName}-FluentbitServiceRoleArn"  
 
   oVpcLinkId:
     Description: Use this ID when creating the API Gateway route integration later.
@@ -235,10 +419,34 @@ Outputs:
     Export:
       Name: !Sub "${AWS::StackName}-APIGatewayUrl"
 
+  oApiJwtAuthorizer:
+    Description: Authorizer of api gateway
+    Value: !Ref ApiJwtAuthorizer
+    Export:
+      Name: !Sub "${AWS::StackName}-ApiJwtAuthorizer"      
+
   oCognitoUserpoolClientID:
-    Description: The public endpoint URL for users to access the RAG system.
+    Description: Cognito UserPool client Id.
     Value: !Ref UserPoolClient
     Export:
       Name: !Sub "${AWS::StackName}-CognitoUserpoolClientID"
+
+  oCognitoUserpoolID:
+    Description: Cognito UserPool Id.
+    Value: !Ref UserPool
+    Export:
+      Name: !Sub "${AWS::StackName}-CognitoUserpoolID"
+  
+  oValkeyEndpoint:
+    Description: Valkey endpoint
+    Value: !GetAtt ValkeyCluster.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-ValkeyEndpoint" 
+
+  oValkeyPort:
+    Description: Valkey port
+    Value: !GetAtt ValkeyCluster.Endpoint.Port
+    Export:
+      Name: !Sub "${AWS::StackName}-ValkeyPort"
 
 ##################### Output Block END #####################
