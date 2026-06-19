@@ -15,8 +15,8 @@ This document describes how to build a Python Lambda Layer and Lambda deployment
 
 Create a temporary folder and copy the following files into it:
 
-* `[requirements.txt](./ingestion_service/requirements.txt)`
-* `[ingestion_service_lambda.py](./ingestion_service/ingestion_service_lambda.py)`
+* [requirements.txt](./ingestion_service/requirements.txt)
+* [ingestion_service_lambda.py](./ingestion_service/ingestion_service_lambda.py)
 
 Example:
 
@@ -145,8 +145,8 @@ Following the similar steps mentioned above to build authorization lambda packag
 
 Source files: 
 
-`[requirements.txt](../lambda_authorizer/requirements.txt)`
-`[apigateway_authorizer_lambda.py](../lambda_authorizer/apigateway_authorizer_lambda.py)`
+* [requirements.txt](../lambda_authorizer/requirements.txt)
+* [apigateway_authorizer_lambda.py](../lambda_authorizer/apigateway_authorizer_lambda.py)
 
 Output files:
 
