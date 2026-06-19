@@ -34,11 +34,13 @@ Enterprise-grade AI Knowledge Platform on AWS showcasing **DataOps, LLMOps, GitO
 
 ---
 # 🧩 Deployment Architecture (AWS)
+<img width="1536" height="1024" alt="architecture" src="https://github.com/user-attachments/assets/1d897bd5-e102-4166-8632-1fd103f90b03" />
 
 
 ---
 # 🔁 Query Processing Flow
 
+<img width="1895" height="487" alt="retrieval_flow" src="https://github.com/user-attachments/assets/317d5f48-fd33-4d55-9983-4d80d76f3a9d" />
 
 ---
 # 🔐 Authentication Flow
