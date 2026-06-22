@@ -71,3 +71,6 @@ Enterprise-grade AI Knowledge Platform on AWS showcasing **DataOps, LLMOps, GitO
   - **Step 6:** After deployment, script will display all the resource created and will show the API gateway URI. Use api gateway URI in your browser to access the app. 
    
   - **Step 7:** To delete all created AWS resources, run `./enterprise-rag-delete.sh`. Make sure to update the `AWS_REGION` in the delete script before executing it. 
+
+
+> 📝 Note: This project is actively evolving. If you spot any issues or have suggestions, feel free to share feedback! 
