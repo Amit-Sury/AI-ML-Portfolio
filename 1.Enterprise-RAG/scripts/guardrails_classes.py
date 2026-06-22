@@ -63,7 +63,7 @@ class ClaimsStatus(BaseModel):
         description="Claims not supported by the provided context"
     )	
 
-## validation result Enum with three possibilities. Used in GuardrailResult
+## validation result Enum with four possibilities. Used in GuardrailResult
 class ValidationResult(Enum):
     PASS = "PASS"
     FAIL = "FAIL"
