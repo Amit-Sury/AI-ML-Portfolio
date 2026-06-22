@@ -6,6 +6,7 @@
 ├── .env                             # environment variables 
 ├── __init__.py                      # exports dependent functions, classes
 ├── aws_utilities.py                 # aws utility functions
+├── cache.py                         # implements redis/local cache 
 ├── create_index.py                  # creates index in opensearch serverless collection 
 ├── gen_embedding.py                 # generates query embeddings
 ├── graph.py                         # langGraph workflow orchestration
